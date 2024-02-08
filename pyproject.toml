@@ -66,7 +66,7 @@ exclude = '''
 '''
 
 [tool.ruff]
-select = ["E", "F"]
+lint.select = ["E", "F"]
 line-length = 99
 exclude = [
   ".bzr",
@@ -90,12 +90,12 @@ exclude = [
   "node_modules",
   "venv",
 ]
-ignore = [
+lint.ignore = [
   "E501", # Line too long, handled by black
 ]
-ignore-init-module-imports = true
+lint.ignore-init-module-imports = true
 
-[tool.ruff.mccabe]
+[tool.ruff.lint.mccabe]
 max-complexity = 10
 
 [tool.pydocstyle]
