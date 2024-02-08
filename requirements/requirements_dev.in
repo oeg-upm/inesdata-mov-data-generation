@@ -1,13 +1,6 @@
 black~=20.8b1               # Code formater
-bump2version~=1.0.0         # Version control
-coverage~=5.0               # Measures tests in %
 flake8~=3.8.0               # Source code linter
-mypy~=0.770                 # Type annotations for Python
 pre-commit~=2.9.2           # Pre-commit hooks
 pydocstyle~=5.1.0           # Analyze docstring conventions
-pytest~=6.1.0               # Test library
-rtcat-sphinx-theme~=0.1.1   # Theme for sphinx
 setuptools~=50.3.0          # Easily build, install, upgrade packages
-tox~=3.20.0                 # Test automation tool
-twine~=3.2.0                # Publish package
 wheel~=0.35.0               # A built-package formattwine
