@@ -8,14 +8,34 @@ black==23.3.0
     # via -r requirements/requirements_dev.in
 cfgv==3.3.1
     # via pre-commit
+<<<<<<< HEAD
 click==8.0.3
     # via black
 distlib==0.3.4
     # via virtualenv
+=======
+click==8.1.7
+    # via
+    #   -c requirements/requirements.txt
+    #   black
+coverage[toml]==7.4.1
+    # via
+    #   coverage
+    #   pytest-cov
+distlib==0.3.4
+    # via virtualenv
+exceptiongroup==1.2.0
+    # via pytest
+>>>>>>> develop
 filelock==3.4.2
     # via virtualenv
 identify==2.4.9
     # via pre-commit
+<<<<<<< HEAD
+=======
+iniconfig==2.0.0
+    # via pytest
+>>>>>>> develop
 isort==5.13.2
     # via -r requirements/requirements_dev.in
 mypy-extensions==0.4.3
@@ -23,16 +43,36 @@ mypy-extensions==0.4.3
 nodeenv==1.6.0
     # via pre-commit
 packaging==23.2
+<<<<<<< HEAD
     # via black
+=======
+    # via
+    #   black
+    #   pytest
+>>>>>>> develop
 pathspec==0.9.0
     # via black
 platformdirs==2.5.0
     # via
     #   black
     #   virtualenv
+<<<<<<< HEAD
 pre-commit==3.2.2
     # via -r requirements/requirements_dev.in
 pydocstyle==6.3.0
+=======
+pluggy==1.4.0
+    # via pytest
+pre-commit==3.2.2
+    # via -r requirements/requirements_dev.in
+pydocstyle==6.3.0
+    # via -r requirements/requirements_dev.in
+pytest==8.0.0
+    # via
+    #   -r requirements/requirements_dev.in
+    #   pytest-cov
+pytest-cov==4.1.0
+>>>>>>> develop
     # via -r requirements/requirements_dev.in
 pyyaml==6.0
     # via pre-commit
@@ -43,6 +83,13 @@ six==1.16.0
 snowballstemmer==2.2.0
     # via pydocstyle
 tomli==2.0.1
+<<<<<<< HEAD
     # via black
+=======
+    # via
+    #   black
+    #   coverage
+    #   pytest
+>>>>>>> develop
 virtualenv==20.13.1
     # via pre-commit

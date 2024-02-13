@@ -1,3 +1,5 @@
 minio==7.2.3
 aiohttp==3.9.3
 PyYAML==6.0.1
+typer[all]==0.9.0
+pydantic-settings==2.1.0
