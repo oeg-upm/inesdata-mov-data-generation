@@ -1,86 +1,154 @@
 """Gather raw data from emt."""
-
 import asyncio
 import datetime
 import io
 import json
 
 import aiohttp
-import yaml
+import requests
 from minio import Minio
 from minio.error import S3Error
 
-
-def load_configuration(path: str) -> dict:
-    """Load config file.
-
-    Args:
-        path (str): path of the config file
-
-    Returns:
-        dict: with the config file loaded
-    """
-    with open(path, "r") as file:
-        configuration = yaml.safe_load(file)
-    return configuration
+from inesdata_mov_datasets.settings import Settings
+from inesdata_mov_datasets.utils import read_settings
 
 
-def minio_connection(configuration: dict) -> Minio:
+def minio_connection(configuration: Settings) -> Minio:
     """Manage connection to minio server.
 
     Args:
-        configuration (dict): dictionary with the configuration of the proyect 
+        configuration (dict): Dictionary with the configuration of the proyect.
 
     Returns:
-        Minio: object with the MinIO client
+        Minio: Object with the MinIO client.
     """
     minio_client = Minio(
-        configuration["minio"]["endpoint"],
-        access_key=configuration["minio"]["access_key"],
-        secret_key=configuration["minio"]["secret_key"],
+        configuration.storage.config.minio.endpoint,
+        access_key=configuration.storage.config.minio.access_key,
+        secret_key=configuration.storage.config.minio.secret_key,
         region="us-east-1",
-        secure=configuration["minio"]["secure"],
+        secure=configuration.storage.config.minio.secure,
     )
     return minio_client
 
 
-async def get_eta(
-    session: aiohttp, url: str, stop_id: str, headers: json, body: json
-):
+def login_emt(config: Settings) -> str:
+    """Get token from EMT API.
+
+    Args:
+        config (Settings): Object with the config file.
+
+    Returns:
+       str: Token from EMT Login.
+    """
+    if config.sources.emt.credentials.x_client_id is not None:
+        headers = {
+            "X-ClientId": config.sources.emt.credentials.x_client_id,
+            "passKey": config.sources.emt.credentials.passkey,
+            "Content-Type": "application/json",
+            "Accept": "application/json",
+        }
+    else:
+        headers = {
+            "email": config.sources.emt.credentials.email,
+            "password": config.sources.emt.credentials.password,
+            "Content-Type": "application/json",
+            "Accept": "application/json",
+        }
+    r = requests.get(
+        "https://openapi.emtmadrid.es/v2/mobilitylabs/user/login/", headers=headers, verify=False
+    )
+    formato_json = r.json()
+
+    return formato_json["data"][0]["accessToken"]
+
+
+async def get_eta(session: aiohttp, stop_id: str, headers: json) -> json:
     """Make the API call to ETA endpoint.
 
     Args:
-        session (aiohttp.ClientSession): call session to make faster the calls to the same endpoint
-        url (str): url of the endpoint
-        stop_id (str): id of the bus stop
-        headers (json): headers of the http call
-        body (json): body of the post petition
+        session (aiohttp.ClientSession): Call session to make faster the calls to the same API.
+        url (str): Url of the endpoint.
+        stop_id (str): Id of the bus stop.
+        headers (json): Headers of the http call.
+        body (json): Body of the post petition.
 
     Returns:
-        _type_: response of the petition in json format
+        json: Response of the petition in json format.
     """
-    eta_url = url.format(stopId=stop_id)
+    body = {
+        "cultureInfo": "ES",
+        "Text_StopRequired_YN": "N",
+        "Text_EstimationsRequired_YN": "Y",
+        "Text_IncidencesRequired_YN": "N",
+    }
+    eta_url = f"https://openapi.emtmadrid.es/v2/transport/busemtmad/stops/{stop_id}/arrives/"
     async with session.post(eta_url, headers=headers, json=body) as response:
         return await response.json()
 
 
 async def get_calendar(
-    session: aiohttp, url: str, startDate: str, endDate: str, headers: json,
-):
-    calendar_url = url.format(start=startDate, end=endDate)
+    session: aiohttp,
+    startDate: str,
+    endDate: str,
+    headers: json,
+) -> json:
+    """Call Calendar endpoint EMT.
+
+    Args:
+        session (aiohttp): Call session to make faster the calls to the same API.
+        startDate (str): Start date of the date you want to check.
+        endDate (str): End date of the date you want to check.
+        headers (json): Headers of the http petition.
+
+    Returns:
+        json: Response of the petition in json format.
+    """
+    calendar_url = (
+        f"https://openapi.emtmadrid.es/v1/transport/busemtmad/calendar/{startDate}/{endDate}/"
+    )
     async with session.get(calendar_url, headers=headers) as response:
         return await response.json()
-    
+
 
 async def get_lineDetail(
-    session: aiohttp, url: str, date: str, stop_id: str, headers: json,
-):
-    lineDetail_url = url.format(stopId=stop_id, date=date)
+    session: aiohttp,
+    date: str,
+    stop_id: str,
+    headers: json,
+) -> json:
+    """Call lineDetail endpoint EMT.
+
+    Args:
+        session (aiohttp): Call session to make faster the calls to the same API.
+        date (str): Date reference of the petition (we use the date of the done petition).
+        stop_id (str): Id of the stop.
+        headers (json): Headers of the petition.
+
+    Returns:
+        json: Response of the petition in json format.
+    """
+    lineDetail_url = (
+        f"https://openapi.emtmadrid.es/v1/transport/busemtmad/lines/{stop_id}/info/{date}"
+    )
     async with session.get(lineDetail_url, headers=headers) as response:
         return await response.json()
 
 
-def check_file_exists(minio_client, bucket_name, object_name):
+def check_file_exists(minio_client: Minio, bucket_name: str, object_name: str) -> bool:
+    """Check if a file exists.
+
+    Args:
+        minio_client (Minio): Client of the Minio bucket.
+        bucket_name (str): Bucket name.
+        object_name (str): Object name.
+
+    Raises:
+        e: S3Error if file is not detected.
+
+    Returns:
+        bool: True if dile is detected, False otherwise.
+    """
     try:
         minio_client.stat_object(bucket_name, object_name)
         return True
@@ -91,77 +159,80 @@ def check_file_exists(minio_client, bucket_name, object_name):
             raise e
 
 
-async def main():
-    config = load_configuration("/home/jfog/proyects/inesdata-mov/data-generation/config.yaml")
-    minio_client = minio_connection(config)
-    access_token = "36306b78-ca5f-11ee-b928-8688096f1cdc"
+async def main(config: Settings):
+    minio_client = minio_connection(config)  # Iniciar conexión minio
+
+    access_token = login_emt(config)  # Obtener token de la EMT
+
+    # Headers de las peticiones a la API de EMT
     headers = {
         "accessToken": access_token,
         "Content-Type": "application/json",
         "Accept": "application/json",
     }
-    body = {
-        "cultureInfo": "ES",
-        "Text_StopRequired_YN": "N",
-        "Text_EstimationsRequired_YN": "Y",
-        "Text_IncidencesRequired_YN": "N",
-    }
-    current_datetime = datetime.datetime.now().replace(second=0)
 
-    bucket_name = "inesdata-mov"
+    bucket_name = config.storage.config.minio.bucket
 
+    # formateo de fechas
+    current_datetime = datetime.datetime.now().replace(second=0)  # fecha actual sin segundos
+    formatted_date = current_datetime.strftime(
+        "%Y-%m-%dT%H:%M"
+    )  # fecha formateada según ISO86001 sin segundos
+    formatted_date_day = current_datetime.strftime(
+        "%Y%m%d"
+    )  # fecha formateada año|mes|dia todo unido
+    formatted_date_slash = current_datetime.strftime(
+        "%Y/%m/%d"
+    )  # fecha formateada año/mes/dia para almacenar en minio
 
-    formatted_date = current_datetime.strftime("%Y-%m-%dT%H:%M")
-    formatted_date_day = current_datetime.strftime("%Y%m%d")
-    formatted_date_slash = current_datetime.strftime("%Y/%m/%d")
-    
-    object_calendar_name = f"/raw/emt/{formatted_date_slash}/calendar/calendar_{formatted_date_day}.json"
-    
     async with aiohttp.ClientSession() as session:
-        # Lista para almacenar las tareas de manera asíncrona
+        # List to store tasks asynchronously
         calendar_tasks = []
         eta_tasks = []
         lineDetail_tasks = []
-        first_stop = config["emt"]["stops"]["plazaCastilla"][0]
-        
-        # Realizar solicitud al endpoint del lineDetail comprobando que no se ha hecho la peticion aun en el dia de hoy
+        first_stop = config.sources.emt.stops[0]
+
+        object_calendar_name = (
+            f"/raw/emt/{formatted_date_slash}/calendar/calendar_{formatted_date_day}.json"
+        )
+
+        # Make request to the lineDetail endpoint checking if the request has not been made today
         first_object_lineDetail_name = f"/raw/emt/{formatted_date_slash}/lineDetail/lineDetail_{first_stop}_{formatted_date_day}.json"
         if not check_file_exists(minio_client, bucket_name, first_object_lineDetail_name):
-            for stop_id in config["emt"]["stops"]["plazaCastilla"]:
+            for stop_id in config.sources.emt.stops:
                 lineDetail_task = asyncio.ensure_future(
-                    get_lineDetail(session, config["emt"]["endpoints"]["lineDetail"], formatted_date_day, stop_id, headers)
+                    get_lineDetail(session, formatted_date_day, stop_id, headers)
                 )
                 lineDetail_tasks.append(lineDetail_task)
         else:
-            print("ya llamé a LineDetail")
-        
-        # Realizar solicitud al endpoint del calendario
+            print("Already called LineDetail")
+
+        # Make request to the calendar endpoint
         if not check_file_exists(minio_client, bucket_name, object_calendar_name):
             calendar_task = asyncio.ensure_future(
-                get_calendar(session, config["emt"]["endpoints"]["calendar"], formatted_date_day, formatted_date_day, headers)
+                get_calendar(session, formatted_date_day, formatted_date_day, headers)
             )
             calendar_tasks.append(calendar_task)
-            
+
         else:
-            print("ya llamé a Calendar")
+            print("Already called Calendar")
 
-
-        # Realizar solicitudes al eta de cada parada
-        for stop_id in config["emt"]["stops"]["plazaCastilla"]:
-            eta_task = asyncio.ensure_future(
-                get_eta(session, config["emt"]["endpoints"]["etaUrl"], stop_id, headers, body)
-            )
+        # Make requests to the eta for each stop
+        for stop_id in config.sources.emt.stops:
+            eta_task = asyncio.ensure_future(get_eta(session, stop_id, headers))
             eta_tasks.append(eta_task)
 
-        # Esperar a que todas las tareas se completen
-        calendar_response, *eta_and_lineDetail_responses = await asyncio.gather(*calendar_tasks, *eta_tasks, *lineDetail_tasks)
+        # Wait for all tasks to complete
+        calendar_response, *eta_and_lineDetail_responses = await asyncio.gather(
+            *calendar_tasks, *eta_tasks, *lineDetail_tasks
+        )
 
-        # Separar las respuestas de ETA y LineDetail
-        eta_responses = eta_and_lineDetail_responses[:len(eta_tasks)]
-        lineDetail_responses = eta_and_lineDetail_responses[len(eta_tasks):]
+        # Separate ETA and LineDetail responses
+        eta_responses = eta_and_lineDetail_responses[: len(eta_tasks)]
+        lineDetail_responses = eta_and_lineDetail_responses[len(eta_tasks) :]
 
         if lineDetail_responses:
-            for stop_id, response in zip(config["emt"]["stops"]["plazaCastilla"], lineDetail_responses):
+            for stop_id, response in zip(config.sources.emt.stops, lineDetail_responses):
                 object_lineDetail_name = f"/raw/emt/{formatted_date_slash}/lineDetail/lineDetail_{stop_id}_{formatted_date_day}.json"
                 try:
                     response_json_str = json.dumps(response)
@@ -172,11 +243,9 @@ async def main():
                         len(response_json_str),
                     )
                 except:
-                    print("Error parada ",stop_id, "Line detail ")
+                    print("Error for stop ", stop_id, "Line detail ")
 
-
-                
-        # Almacenar la respuesta del calendario en MinIO si está presente
+        # Store the calendar response in MinIO if present
         if calendar_response:
             calendar_json_str = json.dumps(calendar_response)
             minio_client.put_object(
@@ -186,12 +255,13 @@ async def main():
                 len(calendar_json_str),
             )
 
-        # Almacenar las respuestas de las paradas de autobús en MinIO
-        for stop_id, response in zip(config["emt"]["stops"]["plazaCastilla"], eta_responses):
-            object_eta_name = f"/raw/emt/{formatted_date_slash}/eta/eta_{stop_id}_{formatted_date}.json"
-            
+        # Store the bus stop responses in MinIO
+        for stop_id, response in zip(config.sources.emt.stops, eta_responses):
+            object_eta_name = (
+                f"/raw/emt/{formatted_date_slash}/eta/eta_{stop_id}_{formatted_date}.json"
+            )
+
             try:
-                
                 response_json_str = json.dumps(response)
 
                 minio_client.put_object(
@@ -202,14 +272,11 @@ async def main():
                 )
 
             except:
-                print("Error parada ",stop_id, "Time arrival ")
-    
+                print("Error for stop ", stop_id, "Time arrival ")
 
 
 if __name__ == "__main__":
-    config = load_configuration("/home/jfog/proyects/inesdata-mov/data-generation/config.yaml")
-    '''
-    minio_client = minio_connection(config)
-    print(minio_client)
-    '''
-    asyncio.run(main())
+    config = read_settings("/home/jfog/proyects/inesdata-mov/data-generation/jfog-newconfig.yaml")
+    response = login_emt(config)
+
+    asyncio.run(main(config))
