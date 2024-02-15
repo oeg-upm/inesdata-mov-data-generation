@@ -67,7 +67,7 @@ async def get_eta(session: aiohttp, stop_id: str, headers: json) -> json:
     """Make the API call to ETA endpoint.
 
     Args:
-        session (aiohttp.ClientSession): Call session to make faster the calls to the same API.
+        session (aiohttp): Call session to make faster the calls to the same API.
         url (str): Url of the endpoint.
         stop_id (str): Id of the bus stop.
         headers (json): Headers of the http call.
@@ -111,13 +111,13 @@ async def get_calendar(
         return await response.json()
 
 
-async def get_lineDetail(
+async def get_line_detail(
     session: aiohttp,
     date: str,
     stop_id: str,
     headers: json,
 ) -> json:
-    """Call lineDetail endpoint EMT.
+    """Call line_detail endpoint EMT.
 
     Args:
         session (aiohttp): Call session to make faster the calls to the same API.
@@ -128,10 +128,10 @@ async def get_lineDetail(
     Returns:
         json: Response of the petition in json format.
     """
-    lineDetail_url = (
+    line_detail_url = (
         f"https://openapi.emtmadrid.es/v1/transport/busemtmad/lines/{stop_id}/info/{date}"
     )
-    async with session.get(lineDetail_url, headers=headers) as response:
+    async with session.get(line_detail_url, headers=headers) as response:
         return await response.json()
 
 
@@ -160,11 +160,11 @@ def check_file_exists(minio_client: Minio, bucket_name: str, object_name: str) -
 
 
 async def main(config: Settings):
-    minio_client = minio_connection(config)  # Iniciar conexión minio
+    minio_client = minio_connection(config)  # Start Minio connection
 
-    access_token = login_emt(config)  # Obtener token de la EMT
+    access_token = login_emt(config)  # Obtain token from EMT
 
-    # Headers de las peticiones a la API de EMT
+    # Headers for requests to the EMT API
     headers = {
         "accessToken": access_token,
         "Content-Type": "application/json",
@@ -173,39 +173,40 @@ async def main(config: Settings):
 
     bucket_name = config.storage.config.minio.bucket
 
-    # formateo de fechas
-    current_datetime = datetime.datetime.now().replace(second=0)  # fecha actual sin segundos
+    # Date formatting
+    current_datetime = datetime.datetime.now().replace(second=0)  # current date without seconds
     formatted_date = current_datetime.strftime(
         "%Y-%m-%dT%H:%M"
-    )  # fecha formateada según ISO86001 sin segundos
+    )  # formatted date according to ISO86001 without seconds
     formatted_date_day = current_datetime.strftime(
         "%Y%m%d"
-    )  # fecha formateada año|mes|dia todo unido
+    )  # formatted date year|month|day all together
     formatted_date_slash = current_datetime.strftime(
         "%Y/%m/%d"
-    )  # fecha formateada año/mes/dia para almacenar en minio
+    )  # formatted date year/month/day for storage in Minio
+
 
     async with aiohttp.ClientSession() as session:
         # List to store tasks asynchronously
         calendar_tasks = []
         eta_tasks = []
-        lineDetail_tasks = []
+        line_detail_tasks = []
         first_stop = config.sources.emt.stops[0]
 
         object_calendar_name = (
             f"/raw/emt/{formatted_date_slash}/calendar/calendar_{formatted_date_day}.json"
         )
 
-        # Make request to the lineDetail endpoint checking if the request has not been made today
-        first_object_lineDetail_name = f"/raw/emt/{formatted_date_slash}/lineDetail/lineDetail_{first_stop}_{formatted_date_day}.json"
-        if not check_file_exists(minio_client, bucket_name, first_object_lineDetail_name):
+        # Make request to the line_detail endpoint checking if the request has not been made today
+        first_object_line_detail_name = f"/raw/emt/{formatted_date_slash}/line_detail/line_detail_{first_stop}_{formatted_date_day}.json"
+        if not check_file_exists(minio_client, bucket_name, first_object_line_detail_name):
             for stop_id in config.sources.emt.stops:
-                lineDetail_task = asyncio.ensure_future(
-                    get_lineDetail(session, formatted_date_day, stop_id, headers)
+                line_detail_task = asyncio.ensure_future(
+                    get_line_detail(session, formatted_date_day, stop_id, headers)
                 )
-                lineDetail_tasks.append(lineDetail_task)
+                line_detail_tasks.append(line_detail_task)
         else:
-            print("Already called LineDetail")
+            print("Already called line_detail")
 
         # Make request to the calendar endpoint
         if not check_file_exists(minio_client, bucket_name, object_calendar_name):
@@ -223,22 +224,19 @@ async def main(config: Settings):
             eta_tasks.append(eta_task)
 
         # Wait for all tasks to complete
-        calendar_response, *eta_and_lineDetail_responses = await asyncio.gather(
-            *calendar_tasks, *eta_tasks, *lineDetail_tasks
-        )
+        calendar_response = await asyncio.gather(*calendar_tasks)
+        eta_responses = await asyncio.gather(*eta_tasks)
+        line_detail_responses = await asyncio.gather(*line_detail_tasks)
 
-        # Separate ETA and LineDetail responses
-        eta_responses = eta_and_lineDetail_responses[: len(eta_tasks)]
-        lineDetail_responses = eta_and_lineDetail_responses[len(eta_tasks) :]
 
-        if lineDetail_responses:
-            for stop_id, response in zip(config.sources.emt.stops, lineDetail_responses):
-                object_lineDetail_name = f"/raw/emt/{formatted_date_slash}/lineDetail/lineDetail_{stop_id}_{formatted_date_day}.json"
+        if line_detail_responses:
+            for stop_id, response in zip(config.sources.emt.stops, line_detail_responses):
+                object_line_detail_name = f"/raw/emt/{formatted_date_slash}/line_detail/line_detail_{stop_id}_{formatted_date_day}.json"
                 try:
                     response_json_str = json.dumps(response)
                     minio_client.put_object(
                         bucket_name,
-                        object_lineDetail_name,
+                        object_line_detail_name,
                         io.BytesIO(response_json_str.encode("utf-8")),
                         len(response_json_str),
                     )
@@ -263,7 +261,6 @@ async def main(config: Settings):
 
             try:
                 response_json_str = json.dumps(response)
-
                 minio_client.put_object(
                     bucket_name,
                     object_eta_name,
