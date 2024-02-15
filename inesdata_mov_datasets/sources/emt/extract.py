@@ -185,7 +185,6 @@ async def main(config: Settings):
         "%Y/%m/%d"
     )  # formatted date year/month/day for storage in Minio
 
-
     async with aiohttp.ClientSession() as session:
         # List to store tasks asynchronously
         calendar_tasks = []
@@ -227,7 +226,6 @@ async def main(config: Settings):
         calendar_response = await asyncio.gather(*calendar_tasks)
         eta_responses = await asyncio.gather(*eta_tasks)
         line_detail_responses = await asyncio.gather(*line_detail_tasks)
-
 
         if line_detail_responses:
             for stop_id, response in zip(config.sources.emt.stops, line_detail_responses):
