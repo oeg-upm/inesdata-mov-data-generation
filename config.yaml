@@ -6,6 +6,7 @@ sources:
       x_client_id: my_x_client_id
       passkey: my_passkey
     stops: [1,2]
+    lines: [1,2]
   aemet:
     credentials:
       api_key: my_api_key
