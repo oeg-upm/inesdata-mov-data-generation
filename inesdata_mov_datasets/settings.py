@@ -38,6 +38,7 @@ class SourceEmtCredentialsSettings(BaseModel):
 class SourceEmtSettings(BaseModel):
     credentials: SourceEmtCredentialsSettings
     stops: List[int]
+    lines: List[int]
 
 
 class SourceAemetCredentialsSettings(BaseModel):
