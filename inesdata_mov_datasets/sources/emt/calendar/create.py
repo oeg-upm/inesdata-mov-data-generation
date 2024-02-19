@@ -1,73 +1,113 @@
-import sys
-from minio import Minio
-from datetime import datetime
-import os
+import asyncio
 import json
-import pandas as pd
+import os
+import sys
 import traceback
-from dotenv import load_dotenv
-load_dotenv()  # load env variables
+from datetime import datetime
+from pathlib import Path
+
+import pandas as pd
+
+from inesdata_mov_datasets.utils import download_objs, read_settings
 
 
-def load_historical_dates_df(calendar_processed_data_filename: str) -> pd.DataFrame:
-    if os.path.isfile(calendar_processed_data_filename):
-        df = pd.read_csv(calendar_processed_data_filename, parse_dates=['date'])
-    else:
-        df = pd.DataFrame([], columns=['date', 'dayType'])
-    return df
+def download_calendar(
+    bucket: str,
+    prefix: str,
+    output_path: str,
+    endpoint_url: str,
+    aws_access_key_id: str,
+    aws_secret_access_key: str,
+):
+    """Download from minIO a day's raw data of EMT's calendar endpoint.
+
+    Args:
+        bucket (str): bucket name
+        prefix (str): path to raw data directory from minio
+        output_path (str): local path to store output from minio
+        endpoint_url (str): url of minio bucket
+        aws_access_key_id (str): minio user
+        aws_secret_access_key (str): minio password
+    """
+    loop = asyncio.new_event_loop()
+    loop.run_until_complete(
+        download_objs(
+            bucket, prefix, output_path, endpoint_url, aws_access_key_id, aws_secret_access_key
+        )
+    )
 
 
-def generate_historical_dates_df(date: str):
-    # Load historical dataset and check if it is created and not empty
-    calendar_processed_data_filename = os.path.abspath(os.getenv('DATA_PATH')) + '/processed/emt/calendar_processed_dataset.csv'
-    historical_dates_df = load_historical_dates_df(calendar_processed_data_filename)
-    
-    # Download minio files
-    calendar_objects = minio_client.list_objects(os.getenv('BUCKET_NAME'), prefix=f"raw/emt/{date}/calendar/")
-    for calendar_object in calendar_objects:
-        calenadar_filename = os.path.abspath(os.getenv('DATA_PATH')) + '/' + calendar_object.object_name
-        if not os.path.isfile(calenadar_filename):
-            print(calendar_object.object_name)
-            # Download raw data file
-            minio_client.fget_object(os.getenv('BUCKET_NAME'), calendar_object.object_name, calenadar_filename)
-            # Collect raw data for day type
-            if os.path.isfile(calenadar_filename):
-                with open(calenadar_filename, 'r') as f:
-                    calendar_content = json.load(f)
-                if len(calendar_content['data']) != 0:
-                    historical_dates_df = pd.DataFrame(calendar_content['data'])
-                    historical_dates_df['date'] = pd.to_datetime(historical_dates_df['date'], dayfirst=True)
-                    historical_dates_df = historical_dates_df[['date', 'dayType']]
-                # After getting the dat type, remove raw data file from folder
-                os.remove(calenadar_filename)
-    
-    print(historical_dates_df)
-    # Store processed dataset
-    historical_dates_df.to_csv(calendar_processed_data_filename, index=None)
+def generate_df_from_file(content: dict) -> pd.DataFrame:
+    """Generate a day's pandas dataframe from a single file downloaded from MinIO.
+
+    Args:
+        content (dict): calendar info from a file
+
+    Returns:
+        pd.DataFrame: day's pandas dataframe from a single file downloaded from MinIO
+    """
+    day_df = pd.DataFrame([])
+    try:
+        if len(content["data"]) != 0:
+            day_df = pd.DataFrame(content["data"])
+            if not day_df.empty:
+                day_df["datetime"] = pd.to_datetime(content["datetime"])
+                # Add date col
+                day_df["date"] = pd.to_datetime(day_df["date"], dayfirst=True)
+                # Get selected cols
+                # day_df = day_df[['date', 'dayType']]
+    except Exception as e:
+        print(e)
+        traceback.print_exc()
+    return day_df
+
+
+def generate_day_df(storage_path: str, date: str):
+    """Generate a day's pandas dataframe from a whole day's files downloaded from MinIO.
+
+    Args:
+        storage_path (str): local path to store resulting df
+        date (str): a date formatted in YYYY/MM/DD
+    """
+    dfs = []
+    files = os.listdir(storage_path + f"/raw/emt/{date}/calendar/")
+    print(f"files count: {len(files)}")
+    for file in files:
+        print(f"generating df from {file}")
+        with open(storage_path + f"/raw/emt/{date}/calendar/" + file, "r") as f:
+            content = json.load(f)
+        df = generate_df_from_file(content[0])
+        dfs.append(df)
+
+    final_df = pd.concat(dfs)
+    # sort values
+    final_df = final_df.sort_values(by=["datetime"])
+    # export final df
+    Path(storage_path + f"/processed/emt/{date}").mkdir(parents=True, exist_ok=True)
+    processed_storage_path = storage_path + f"/processed/emt/{date}"
+    final_df.to_csv(processed_storage_path + "/calendar_processed.csv")
+    print(final_df.shape)
 
 
 if __name__ == "__main__":
     start = datetime.now()
-    
-    # Connect to minio bucket
-    minio_client = Minio(
-        os.getenv('BUCKET_URL'),
-        access_key=os.getenv('MINIO_ACCESS_KEY_ID'),
-        secret_key=os.getenv('MINIO_SECRET_ACCESS_KEY'),
-        region='us-east-1',
-        secure=False
-    )
-    
-    # Download day's raw data from EMT
-    date = sys.argv[1] if len(sys.argv) > 1 else datetime.today().strftime('%Y/%m/%d')
-    # date = datetime.strptime('2024/02/09', '%Y/%m/%d').strftime('%Y/%m/%d')
-    print(f'Getting day type of {date}')
 
-    try:
-        generate_historical_dates_df(date)
-    except Exception as e: 
-        print(e)
-        traceback.print_exc()
-    
+    settings = read_settings(path="/home/code/inesdata-mov/data-generation/config_dev.yaml")
+    # Download day's raw data from minio
+    date = sys.argv[1] if len(sys.argv) > 1 else datetime.today().strftime("%Y/%m/%d")
+    # date = datetime.strptime('2024/02/09', '%Y/%m/%d').strftime('%Y/%m/%d')
+    print(f"Generating EMT dataset for date: {date}")
+
+    storage_config = settings.storage.config
+    download_calendar(
+        bucket=storage_config.minio.bucket,
+        prefix=f"raw/emt/{date}/calendar/",
+        output_path=storage_config.local.path,
+        endpoint_url=storage_config.minio.endpoint,
+        aws_access_key_id=storage_config.minio.access_key,
+        aws_secret_access_key=storage_config.minio.secret_key,
+    )
+    generate_day_df(storage_path=storage_config.local.path, date=date)
+
     end = datetime.now()
     print(end - start)
