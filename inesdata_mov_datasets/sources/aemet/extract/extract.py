@@ -15,7 +15,6 @@ def get_weather_madrid(config: Settings):
     Args:
         config (Settings): Object with the config file.
     """
-
     url_madrid = (
         "https://opendata.aemet.es/opendata/api/prediccion/especifica/municipio/horaria/28079"
     )
@@ -29,12 +28,12 @@ def get_weather_madrid(config: Settings):
     r = requests.get(url_madrid, headers=headers)
     r_json = requests.get(r.json()["datos"]).json()
 
-    save_weather(config, r_json)
+    save_aemet(config, r_json)
 
     return
 
 
-def save_weather(config: Settings, data: json):
+def save_aemet(config: Settings, data: json):
     """Save weather json.
 
     Args:
