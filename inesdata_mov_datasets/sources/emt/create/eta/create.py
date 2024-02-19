@@ -75,6 +75,7 @@ def generate_day_df(storage_path: str, date: str):
         date (str): a date formatted in YYYY/MM/DD
     """
     dfs = []
+    Path(storage_path + f"/raw/emt/{date}/eta").mkdir(parents=True, exist_ok=True)
     files = os.listdir(storage_path + f"/raw/emt/{date}/eta/")
     print(f"files count: {len(files)}")
     for file in files:
