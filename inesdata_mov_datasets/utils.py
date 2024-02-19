@@ -1,5 +1,6 @@
 import asyncio
 import os
+from minio import Minio
 
 import aiofiles.os
 import yaml
@@ -60,3 +61,22 @@ def read_settings(path: str) -> Settings:
     """
     with open(path, "r") as file:
         return Settings(**yaml.safe_load(file))
+    
+
+def minio_connection(configuration: Settings) -> Minio:
+    """Manage connection to minio server.
+
+    Args:
+        config (Settings): Object with the config file.
+
+    Returns:
+        Minio: Object with the MinIO client.
+    """
+    minio_client = Minio(
+        configuration.storage.config.minio.endpoint,
+        access_key=configuration.storage.config.minio.access_key,
+        secret_key=configuration.storage.config.minio.secret_key,
+        region="us-east-1",
+        secure=configuration.storage.config.minio.secure,
+    )
+    return minio_client
