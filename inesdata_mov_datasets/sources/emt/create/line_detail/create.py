@@ -83,7 +83,6 @@ def generate_day_df(storage_path: str, date: str):
     final_df = pd.concat(dfs)
     # sort values
     final_df = final_df.sort_values(by=["datetime", "line"])
-    print(final_df)
     # export final df
     Path(storage_path + f"/processed/emt/{date}").mkdir(parents=True, exist_ok=True)
     processed_storage_path = storage_path + f"/processed/emt/{date}"
