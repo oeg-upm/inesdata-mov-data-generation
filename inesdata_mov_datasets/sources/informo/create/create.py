@@ -95,7 +95,7 @@ if __name__ == "__main__":
     # Download day's raw data from minio
     date = sys.argv[1] if len(sys.argv) > 1 else datetime.today().strftime("%Y/%m/%d")
     # date = datetime.strptime('2024/02/09', '%Y/%m/%d').strftime('%Y/%m/%d')
-    print(f"Generating EMT dataset for date: {date}")
+    print(f"Generating Informo dataset for date: {date}")
 
     storage_config = settings.storage.config
     download_informo(

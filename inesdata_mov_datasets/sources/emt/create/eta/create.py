@@ -2,6 +2,7 @@ import asyncio
 import json
 import os
 import sys
+import tempfile
 import traceback
 from datetime import datetime
 from pathlib import Path
@@ -67,12 +68,15 @@ def generate_df_from_file(content: dict) -> pd.DataFrame:
     return day_df
 
 
-def generate_day_df(storage_path: str, date: str):
+def generate_day_df(storage_path: str, date: str) -> pd.DataFrame:
     """Generate a day's pandas dataframe from a whole day's files downloaded from MinIO.
 
     Args:
         storage_path (str): local path to store resulting df
         date (str): a date formatted in YYYY/MM/DD
+
+    Returns:
+        pd.DataFrame: day's pandas dataframe
     """
     dfs = []
     Path(storage_path + f"/raw/emt/{date}/eta").mkdir(parents=True, exist_ok=True)
@@ -93,27 +97,42 @@ def generate_day_df(storage_path: str, date: str):
     processed_storage_path = storage_path + f"/processed/emt/{date}"
     final_df.to_csv(processed_storage_path + "/eta_processed.csv")
     print(final_df.shape)
+    return final_df
+
+
+def create_eta_emt(date: str) -> pd.DataFrame:
+    """Create dataset from EMT ETA endpoint.
+
+    Args:
+        date (str): a date formatted in YYYY/MM/DD
+
+    Returns:
+        pd.DataFrame: df from EMT ETA endpoint
+    """
+    settings = read_settings(path="/home/code/inesdata-mov/data-generation/config_dev.yaml")
+    # Download day's raw data from minio
+    print(f"Generating EMT ETA dataset for date: {date}")
+
+    with tempfile.TemporaryDirectory() as tmpdirname:
+        start = datetime.now()
+        storage_config = settings.storage.config
+        download_eta(
+            bucket=storage_config.minio.bucket,
+            prefix=f"raw/emt/{date}/eta/",
+            output_path=tmpdirname,
+            endpoint_url=storage_config.minio.endpoint,
+            aws_access_key_id=storage_config.minio.access_key,
+            aws_secret_access_key=storage_config.minio.secret_key,
+        )
+        df = generate_day_df(storage_path=tmpdirname, date=date)
+
+        end = datetime.now()
+        print(end - start)
+        return df
 
 
 if __name__ == "__main__":
-    start = datetime.now()
-
-    settings = read_settings(path="/home/code/inesdata-mov/data-generation/config_dev.yaml")
     # Download day's raw data from minio
     date = sys.argv[1] if len(sys.argv) > 1 else datetime.today().strftime("%Y/%m/%d")
     # date = datetime.strptime('2024/02/09', '%Y/%m/%d').strftime('%Y/%m/%d')
-    print(f"Generating EMT dataset for date: {date}")
-
-    storage_config = settings.storage.config
-    download_eta(
-        bucket=storage_config.minio.bucket,
-        prefix=f"raw/emt/{date}/eta/",
-        output_path=storage_config.local.path,
-        endpoint_url=storage_config.minio.endpoint,
-        aws_access_key_id=storage_config.minio.access_key,
-        aws_secret_access_key=storage_config.minio.secret_key,
-    )
-    generate_day_df(storage_path=storage_config.local.path, date=date)
-
-    end = datetime.now()
-    print(end - start)
+    create_eta_emt(date)
