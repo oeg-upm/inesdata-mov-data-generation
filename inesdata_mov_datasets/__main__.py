@@ -11,7 +11,7 @@ from inesdata_mov_datasets.sources.aemet.extract.extract import get_aemet
 from inesdata_mov_datasets.sources.informo.extract.extract import get_informo
 from inesdata_mov_datasets.sources.emt.extract.extract import get_emt
 
-app = typer.Typer()
+app = typer.Typer(add_completion=False)
 
 
 class Sources(str, Enum):

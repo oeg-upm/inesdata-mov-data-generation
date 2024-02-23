@@ -88,4 +88,6 @@ target/
 
 # Mypy cache
 .mypy_cache/
+
+# Dev config
 .config_dev.yaml

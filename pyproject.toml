@@ -3,35 +3,31 @@ requires = ["setuptools"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "inesdata-mov"
+name = "inesdata-mov-datasets"
 dynamic = ["version", "dependencies"]
 requires-python = ">=3.10"
 description = "inesdata-mov"
-authors = [{ name = "" }]
+authors = [{ name = "" }] 
 classifiers = [
   "Programming Language :: Python",
   "Programming Language :: Python :: 3",
   "Programming Language :: Python :: 3 :: Only",
   "Programming Language :: Python :: 3.10",
   "Programming Language :: Python :: 3.11",
-  "Topic :: Scientific/Engineering",
-  "Topic :: Scientific/Engineering :: Artificial Intelligence",
-  "Topic :: Scientific/Engineering :: Mathematics",
-  "Topic :: Security :: Cryptography",
   "Topic :: Software Development",
   "Topic :: Software Development :: Libraries",
   "Topic :: Software Development :: Libraries :: Python Modules",
 ]
 
-[project.urls]
-repository = "https://dev-git.labs.gmv.com/gmv-bda/upm/inesdata-mov/inesdata-mov.git"
+#[project.urls]
+#repository = "" TODO: add project url
 
 [tool.setuptools.dynamic]
-version = { attr = "inesdata_mov.__version__" }
+version = { attr = "inesdata_mov_datasets.__version__" }
 dependencies = { file = "requirements/requirements.txt" }
 
 [tool.setuptools.packages.find]
-include = ["inesdata_mov", "inesdata_mov.*"]
+include = ["inesdata_mov_datasets", "inesdata_mov_datasets.*"]
 namespaces = false
 
 [tool.pytest.ini_options]
