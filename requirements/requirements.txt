@@ -71,6 +71,10 @@ multidict==6.0.5
     # via
     #   aiohttp
     #   yarl
+numpy==1.26.4
+    # via pandas
+pandas==2.2.0
+    # via -r requirements/requirements.in
 pycparser==2.21
     # via cffi
 pycryptodome==3.20.0
@@ -84,11 +88,15 @@ pydantic-settings==2.1.0
 pygments==2.17.2
     # via rich
 python-dateutil==2.8.2
-    # via botocore
+    # via
+    #   botocore
+    #   pandas
 python-dotenv==1.0.1
     # via pydantic-settings
 pytz==2024.1
-    # via -r requirements/requirements.in
+    # via
+    #   -r requirements/requirements.in
+    #   pandas
 pyyaml==6.0.1
     # via -r requirements/requirements.in
 requests==2.31.0
@@ -111,6 +119,8 @@ typing-extensions==4.9.0
     #   pydantic
     #   pydantic-core
     #   typer
+tzdata==2024.1
+    # via pandas
 urllib3==2.0.7
     # via
     #   botocore
