@@ -68,9 +68,9 @@ def create_emt(settings: Settings, date: str):
     print(f"Generating EMT dataset for date: {date}")
     try:
         start = datetime.now()
-        calendar_df = create_calendar_emt(date)
-        line_detail_df = create_line_detail_emt(date)
-        eta_df = create_eta_emt(date)
+        calendar_df = create_calendar_emt(settings, date)
+        line_detail_df = create_line_detail_emt(settings, date)
+        eta_df = create_eta_emt(settings, date)
         if not calendar_df.empty and not line_detail_df.empty and not eta_df.empty:
             calendar_line_df = join_calendar_line_datasets(calendar_df, line_detail_df)
             df = join_eta_dataset(calendar_line_df, eta_df)

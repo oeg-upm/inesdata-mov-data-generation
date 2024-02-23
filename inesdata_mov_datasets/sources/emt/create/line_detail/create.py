@@ -8,6 +8,7 @@ from datetime import datetime
 from pathlib import Path
 
 import pandas as pd
+from inesdata_mov_datasets.settings import Settings
 
 from inesdata_mov_datasets.utils import download_objs, read_settings
 
@@ -115,16 +116,16 @@ def generate_day_df(storage_path: str, date: str) -> pd.DataFrame:
         return pd.DataFrame([])
 
 
-def create_line_detail_emt(date: str) -> pd.DataFrame:
+def create_line_detail_emt(settings: Settings, date: str) -> pd.DataFrame:
     """Create dataset from EMT line_detail endpoint.
 
     Args:
+        settings (Settings): project settings
         date (str): a date formatted in YYYY/MM/DD
 
     Returns:
         pd.DataFrame: df from EMT line_detail endpoint
     """
-    settings = read_settings(path="/home/code/inesdata-mov/data-generation/config_dev.yaml")
     # Download day's raw data from minio
     print(f"Generating EMT line_detail dataset for date: {date}")
 
