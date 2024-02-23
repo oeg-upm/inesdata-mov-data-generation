@@ -1,7 +1,9 @@
 """Extract file to get line_detail info from EMT."""
 import json
+
 import aiohttp
 from aiohttp.client_exceptions import ContentTypeError
+
 
 async def get_line_detail(
     session: aiohttp,
@@ -24,8 +26,8 @@ async def get_line_detail(
         f"https://openapi.emtmadrid.es/v1/transport/busemtmad/lines/{line_id}/info/{date}"
     )
     async with session.get(line_detail_url, headers=headers) as response:
-        try: 
+        try:
             return await response.json()
-        except ContentTypeError as e:
+        except ContentTypeError:
             print("Error in line_detail call line", line_id)
             return -1

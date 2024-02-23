@@ -1,7 +1,9 @@
 """Extract file to get calendar info from EMT."""
 import json
+
 import aiohttp
 from aiohttp.client_exceptions import ContentTypeError
+
 
 async def get_calendar(
     session: aiohttp,
@@ -24,8 +26,8 @@ async def get_calendar(
         f"https://openapi.emtmadrid.es/v1/transport/busemtmad/calendar/{startDate}/{endDate}/"
     )
     async with session.get(calendar_url, headers=headers) as response:
-        try: 
+        try:
             return await response.json()
-        except ContentTypeError as e:
+        except ContentTypeError:
             print("Error in calendar call")
             return -1
