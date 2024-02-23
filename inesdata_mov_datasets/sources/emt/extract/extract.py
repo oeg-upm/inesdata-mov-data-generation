@@ -205,6 +205,7 @@ async def get_emt(config: Settings, minio_client: Minio = None):
                         get_line_detail(session, formatted_date_day, line_id, headers)
                     )
                     line_detail_tasks.append(line_detail_task)
+                    lines_not_called.append(line_id)
                 else:
                     lines_called += 1
 
