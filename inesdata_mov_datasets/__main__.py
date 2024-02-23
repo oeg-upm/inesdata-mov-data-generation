@@ -6,7 +6,7 @@ import typer
 
 from inesdata_mov_datasets.utils import read_settings
 
-app = typer.Typer()
+app = typer.Typer(add_completion=False)
 
 
 @app.command()
