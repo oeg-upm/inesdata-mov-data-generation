@@ -25,5 +25,5 @@ async def get_eta(session: aiohttp, stop_id: str, headers: json) -> json:
         try: 
             return await response.json()
         except ContentTypeError as e:
-            print("error in ETA call stop", stop_id, "Exception ", e)
+            print("Error in ETA call stop", stop_id)
             return -1
