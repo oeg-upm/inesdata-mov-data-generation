@@ -72,8 +72,12 @@ multidict==6.0.5
     #   aiohttp
     #   yarl
 numpy==1.26.4
-    # via pandas
+    # via
+    #   pandas
+    #   pyarrow
 pandas==2.2.0
+    # via -r requirements/requirements.in
+pyarrow==15.0.0
     # via -r requirements/requirements.in
 pycparser==2.21
     # via cffi

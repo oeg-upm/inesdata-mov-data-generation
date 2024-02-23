@@ -42,31 +42,28 @@ def extract(
     """Extract raw data from the sources configurated."""
     # read settings
     config = read_settings(config_path)
-
-    # read settings
-    config = read_settings(config_path)
     
     if config.storage.default == 'minio':
         minio_client = minio_connection(config)
         #EMT
-        if sources.emt:
+        if sources.value == sources.emt or sources.value == sources.all:
             asyncio.run(get_emt(config, minio_client))
         #Aemet
-        if sources.aemet:
+        if sources.value == sources.aemet or sources.value == sources.all:
             get_aemet(config, minio_client)
         #Informo
-        if sources.informo:
+        if sources.value == sources.informo or sources.value == sources.all:
             get_informo(config, minio_client)
             
     if config.storage.default == 'local':
         #EMT
-        if sources.emt:
+        if sources.value == sources.emt or sources.value == sources.all:
             asyncio.run(get_emt(config))
         #Aemet
-        if sources.aemet:
+        if sources.value == sources.aemet or sources.value == sources.all:
             get_aemet(config)
         #Informo
-        if sources.informo:
+        if sources.value == sources.informo or sources.value == sources.all:
             get_informo(config)
         
 

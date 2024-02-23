@@ -263,7 +263,7 @@ async def get_emt(config: Settings, minio_client: Minio = None):
         if calendar_response:
             try:
                 calendar_json_str = json.dumps(calendar_response)
-                if response["code"] == "00":
+                if calendar_response[0]["code"] == "00":
                     if config.storage.default=='minio':
                         minio_client.put_object(
                             bucket_name,
@@ -301,12 +301,14 @@ async def get_emt(config: Settings, minio_client: Minio = None):
                         with open(os.path.join(path_dir_eta, object_eta_name), "w") as file:
                             file.write(response_json_str)
                         
-                else:
+                else: #200 CODE BUT ERROR IN RESPONSE JSON
                     errors_eta += 1
                     list_stops_error.append(stop_id)
 
-            except ContentTypeError as e:
-                print("Error for stop ", stop_id, "Time arrival. Exception ", e)
+            except:
+                errors_eta += 1
+                list_stops_error.append(stop_id)
+                print("Error for stop ", stop_id, "Time arrival")
 
         print("Errors in Line Detail: ", errors_ld)
         print("Errors in ETA:", errors_eta, "list of stops erroring:", list_stops_error)
@@ -324,6 +326,11 @@ async def get_emt(config: Settings, minio_client: Minio = None):
             for stop_id, response in zip(list_stops_error, eta_responses2):
                 try:
                     response_json_str = json.dumps(response)
+                    if response==-1:
+                        errors_eta_retry += 1
+                        list_stops_error_retry.append(stop_id)
+                        continue
+                        
                     if response["code"] == "00":
                         if config.storage.default=='minio':
                             object_eta_name = Path("raw") / "emt" / formatted_date_slash / "eta" / f"eta_{stop_id}_{formatted_date}.json"
@@ -347,6 +354,8 @@ async def get_emt(config: Settings, minio_client: Minio = None):
 
                 except:
                     print("Error for stop ", stop_id, "Time arrival ")
+                    errors_eta_retry += 1
+                    list_stops_error_retry.append(stop_id)
 
         print(
             "Errors in ETA AFTER RETRYING:",

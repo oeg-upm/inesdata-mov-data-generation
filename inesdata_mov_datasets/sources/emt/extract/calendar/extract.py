@@ -27,5 +27,5 @@ async def get_calendar(
         try: 
             return await response.json()
         except ContentTypeError as e:
-            print("error in calendar call. Exception ", e)
+            print("Error in calendar call")
             return -1

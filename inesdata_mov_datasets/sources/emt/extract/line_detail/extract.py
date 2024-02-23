@@ -27,5 +27,5 @@ async def get_line_detail(
         try: 
             return await response.json()
         except ContentTypeError as e:
-            print("error in line_detail call line", line_id, "Exception ", e)
+            print("Error in line_detail call line", line_id)
             return -1
