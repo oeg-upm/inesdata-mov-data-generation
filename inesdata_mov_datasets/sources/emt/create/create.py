@@ -48,7 +48,6 @@ def join_eta_dataset(calendar_line_df: pd.DataFrame, eta_df: pd.DataFrame) -> pd
         df = eta_df.merge(calendar_line_df, on=["date", "line"], how="left")
         df.drop(columns="datetime_y", inplace=True)
         df.rename(columns={"datetime_x": "datetime"}, inplace=True)
-        print(df)
         return df
     except Exception as e:
         print(e)
