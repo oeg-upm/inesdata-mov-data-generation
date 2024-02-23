@@ -98,7 +98,7 @@ def create(
     settings = read_settings(config_path)
     print(f"Create {sources.value} dataset from {start_date} to {end_date}")
     dates = pd.date_range(
-        pd.to_datetime(start_date), pd.to_datetime(end_date) - timedelta(days=1), freq="d"
+        pd.to_datetime(start_date), pd.to_datetime(end_date), freq="d"
     )
     for date in dates:
         date_formatted = date.strftime("%Y/%m/%d")
