@@ -2,12 +2,14 @@ import asyncio
 import json
 import os
 import sys
+import tempfile
 import traceback
 from datetime import datetime
 from pathlib import Path
 
 import pandas as pd
 
+from inesdata_mov_datasets.settings import Settings
 from inesdata_mov_datasets.utils import download_objs, read_settings
 
 
@@ -37,16 +39,18 @@ def download_aemet(
     )
 
 
-def generate_df_from_file(content: dict) -> pd.DataFrame:
+def generate_df_from_file(content: dict, date: str) -> pd.DataFrame:
     """Generate a day's pandas dataframe from a single file downloaded from MinIO.
 
     Args:
-        content (dict): calendar info from a file
+        content (dict): aemet info from a file
+        date (str): a date formatted in YYYY/MM/DD
 
     Returns:
         pd.DataFrame: day's pandas dataframe from a single file downloaded from MinIO
     """
     day_df = pd.DataFrame([])
+    day_df_final = pd.DataFrame([])
     try:
         if len(content[0]["prediccion"]) != 0:
             day_df = pd.DataFrame(content[0]["prediccion"]["dia"])
@@ -56,7 +60,6 @@ def generate_df_from_file(content: dict) -> pd.DataFrame:
             if not day_df.empty:
                 # reorganize cols
                 cols_to_ignore = ["fecha", "orto", "ocaso"]
-                day_df_final = pd.DataFrame([])
                 # Add date cols
                 # day_df_final["datetime"] = pd.to_datetime(day_df['fecha'])
                 # day_df_final["date"] = pd.to_datetime(day_df_final["datetime"].dt.date)
@@ -92,7 +95,7 @@ def generate_day_df(storage_path: str, date: str):
         print(f"generating df from {file}")
         with open(storage_path + f"/raw/aemet/{date}/" + file, "r") as f:
             content = json.load(f)
-        df = generate_df_from_file(content)
+        df = generate_df_from_file(content, date)
         dfs.append(df)
 
     if len(dfs) > 0:
@@ -115,25 +118,35 @@ def generate_day_df(storage_path: str, date: str):
         print(final_df.shape)
 
 
-if __name__ == "__main__":
-    start = datetime.now()
+def create_aemet(settings: Settings, date: str):
+    """Create dataset from AEMET endpoint.
 
-    settings = read_settings(path="/home/code/inesdata-mov/data-generation/config_dev.yaml")
-    # Download day's raw data from minio
-    date = sys.argv[1] if len(sys.argv) > 1 else datetime.today().strftime("%Y/%m/%d")
-    # date = datetime.strptime('2024/02/09', '%Y/%m/%d').strftime('%Y/%m/%d')
-    print(f"Generating AEMET dataset for date: {date}")
+    Args:
+        settings (Settings): project settings
+        date (str): a date formatted in YYYY/MM/DD
+    """
+    try:
+        # Download day's raw data from minio
+        print(f"Generating AEMET dataset for date: {date}")
 
-    storage_config = settings.storage.config
-    download_aemet(
-        bucket=storage_config.minio.bucket,
-        prefix=f"raw/aemet/{date}/",
-        output_path=storage_config.local.path,
-        endpoint_url=storage_config.minio.endpoint,
-        aws_access_key_id=storage_config.minio.access_key,
-        aws_secret_access_key=storage_config.minio.secret_key,
-    )
-    generate_day_df(storage_path=storage_config.local.path, date=date)
+        with tempfile.TemporaryDirectory() as tmpdirname:
+            print(tmpdirname)
+            start = datetime.now()
+            storage_config = settings.storage.config
+            storage_path = storage_config.local.path  # tmpdirname
+            if settings.storage.default != 'local':
+                download_aemet(
+                    bucket=storage_config.minio.bucket,
+                    prefix=f"raw/aemet/{date}/",
+                    output_path=storage_path,
+                    endpoint_url=storage_config.minio.endpoint,
+                    aws_access_key_id=storage_config.minio.access_key,
+                    aws_secret_access_key=storage_config.minio.secret_key,
+                )
+            generate_day_df(storage_path=storage_path, date=date)
 
-    end = datetime.now()
-    print(end - start)
+            end = datetime.now()
+            print(end - start)
+    except Exception as e:
+        print(e)
+        traceback.print_exc()
