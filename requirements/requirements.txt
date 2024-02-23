@@ -87,6 +87,8 @@ python-dateutil==2.8.2
     # via botocore
 python-dotenv==1.0.1
     # via pydantic-settings
+pytz==2024.1
+    # via -r requirements/requirements.in
 pyyaml==6.0.1
     # via -r requirements/requirements.in
 requests==2.31.0

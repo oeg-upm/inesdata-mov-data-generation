@@ -1,10 +1,12 @@
 import asyncio
 import os
 from minio import Minio
+from pathlib import Path
 
 import aiofiles.os
 import yaml
 from aiobotocore.session import get_session
+from minio.error import S3Error
 
 from inesdata_mov_datasets.settings import Settings
 
@@ -80,3 +82,45 @@ def minio_connection(configuration: Settings) -> Minio:
         secure=configuration.storage.config.minio.secure,
     )
     return minio_client
+
+def check_minio_file_exists(minio_client: Minio, bucket_name: str, object_name: str) -> bool:
+    """Check if a file exists.
+
+    Args:
+        minio_client (Minio): Client of the Minio bucket.
+        bucket_name (str): Bucket name.
+        object_name (str): Object name.
+
+    Raises:
+        e: S3Error if file is not detected.
+
+    Returns:
+        bool: True if dile is detected, False otherwise.
+    """
+    try:
+        minio_client.stat_object(bucket_name, object_name)
+        return True
+    except S3Error as e:
+        if e.code == "NoSuchKey":
+            return False
+        else:
+            raise e
+
+def check_local_file_exists(path_dir: Path, object_name: str) -> bool:
+    """Check if a local file exists.
+
+    Args:
+        path_dir (str): Dir path of the file.
+        object_name (str): Object name of the file.
+
+    Returns:
+        bool: True if file exists, False otherwise
+    """
+    # Create a Path object for the file
+    file_path = Path(path_dir) / object_name
+    
+    # Check if the file exists
+    if file_path.exists():
+        return True
+    else:
+        return False
