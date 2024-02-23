@@ -1,7 +1,7 @@
 import asyncio
 import json
+import logging
 import os
-import sys
 import tempfile
 import traceback
 from datetime import datetime
@@ -10,7 +10,12 @@ from pathlib import Path
 import pandas as pd
 
 from inesdata_mov_datasets.settings import Settings
-from inesdata_mov_datasets.utils import download_objs, read_settings
+from inesdata_mov_datasets.utils import download_objs
+
+# Logger
+logging.basicConfig(
+    filename="app.log", level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s"
+)
 
 
 def download_aemet(
@@ -75,8 +80,8 @@ def generate_df_from_file(content: dict, date: str) -> pd.DataFrame:
                         else:
                             day_df_final = day_df_aux
     except Exception as e:
-        print(e)
-        traceback.print_exc()
+        logging.error(e)
+        logging.error(traceback.format_exc())
     return day_df_final
 
 
@@ -90,9 +95,9 @@ def generate_day_df(storage_path: str, date: str):
     dfs = []
     Path(storage_path + f"/raw/aemet/{date}").mkdir(parents=True, exist_ok=True)
     files = os.listdir(storage_path + f"/raw/aemet/{date}/")
-    print(f"files count: {len(files)}")
+    logging.info(f"files count: {len(files)}")
     for file in files:
-        print(f"generating df from {file}")
+        logging.info(f"generating df from {file}")
         with open(storage_path + f"/raw/aemet/{date}/" + file, "r") as f:
             content = json.load(f)
         df = generate_df_from_file(content, date)
@@ -115,7 +120,9 @@ def generate_day_df(storage_path: str, date: str):
         Path(storage_path + f"/processed/aemet/{date}").mkdir(parents=True, exist_ok=True)
         processed_storage_path = storage_path + f"/processed/aemet/{date}"
         final_df.to_csv(processed_storage_path + "/aemet_processed.csv")
-        print(final_df.shape)
+        print(f"Created AEMET df {final_df.shape}")
+    else:
+        print("There is no data to create")
 
 
 def create_aemet(settings: Settings, date: str):
@@ -127,14 +134,14 @@ def create_aemet(settings: Settings, date: str):
     """
     try:
         # Download day's raw data from minio
-        print(f"Generating AEMET dataset for date: {date}")
+        logging.info(f"Generating AEMET dataset for date: {date}")
 
         with tempfile.TemporaryDirectory() as tmpdirname:
-            print(tmpdirname)
+            logging.debug(tmpdirname)
             start = datetime.now()
             storage_config = settings.storage.config
             storage_path = storage_config.local.path  # tmpdirname
-            if settings.storage.default != 'local':
+            if settings.storage.default != "local":
                 download_aemet(
                     bucket=storage_config.minio.bucket,
                     prefix=f"raw/aemet/{date}/",
@@ -146,7 +153,7 @@ def create_aemet(settings: Settings, date: str):
             generate_day_df(storage_path=storage_path, date=date)
 
             end = datetime.now()
-            print(end - start)
+            logging.info(end - start)
     except Exception as e:
-        print(e)
-        traceback.print_exc()
+        logging.error(e)
+        logging.error(traceback.format_exc())

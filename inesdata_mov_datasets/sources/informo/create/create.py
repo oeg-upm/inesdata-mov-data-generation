@@ -1,7 +1,7 @@
 import asyncio
 import json
+import logging
 import os
-import sys
 import tempfile
 import traceback
 from datetime import datetime
@@ -10,7 +10,12 @@ from pathlib import Path
 import pandas as pd
 
 from inesdata_mov_datasets.settings import Settings
-from inesdata_mov_datasets.utils import download_objs, read_settings
+from inesdata_mov_datasets.utils import download_objs
+
+# Logger
+logging.basicConfig(
+    filename="app.log", level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s"
+)
 
 
 def download_informo(
@@ -57,8 +62,8 @@ def generate_df_from_file(content: dict) -> pd.DataFrame:
                 # Add date col
                 day_df["date"] = pd.to_datetime(day_df["datetime"].dt.date)
     except Exception as e:
-        print(e)
-        traceback.print_exc()
+        logging.error(e)
+        logging.error(traceback.format_exc())
     return day_df
 
 
@@ -72,9 +77,9 @@ def generate_day_df(storage_path: str, date: str):
     dfs = []
     Path(storage_path + f"/raw/informo/{date}").mkdir(parents=True, exist_ok=True)
     files = os.listdir(storage_path + f"/raw/informo/{date}/")
-    print(f"files count: {len(files)}")
+    logging.info(f"files count: {len(files)}")
     for file in files:
-        print(f"generating df from {file}")
+        logging.info(f"generating df from {file}")
         with open(storage_path + f"/raw/informo/{date}/" + file, "r") as f:
             content = json.load(f)
         df = generate_df_from_file(content["pms"])
@@ -88,7 +93,9 @@ def generate_day_df(storage_path: str, date: str):
         Path(storage_path + f"/processed/informo/{date}").mkdir(parents=True, exist_ok=True)
         processed_storage_path = storage_path + f"/processed/informo/{date}"
         final_df.to_csv(processed_storage_path + "/informo_processed.csv")
-        print(final_df.shape)
+        print(f"Created INFORMO df {final_df.shape}")
+    else:
+        print("There is no data to create")
 
 
 def create_informo(settings: Settings, date: str):
@@ -100,14 +107,14 @@ def create_informo(settings: Settings, date: str):
     """
     try:
         # Download day's raw data from minio
-        print(f"Generating Informo dataset for date: {date}")
+        logging.info(f"Generating Informo dataset for date: {date}")
 
         with tempfile.TemporaryDirectory() as tmpdirname:
-            print(tmpdirname)
+            logging.debug(tmpdirname)
             start = datetime.now()
             storage_config = settings.storage.config
             storage_path = storage_config.local.path  # tmpdirname
-            if settings.storage.default != 'local':
+            if settings.storage.default != "local":
                 download_informo(
                     bucket=storage_config.minio.bucket,
                     prefix=f"raw/informo/{date}/",
@@ -119,7 +126,7 @@ def create_informo(settings: Settings, date: str):
             generate_day_df(storage_path=storage_path, date=date)
 
             end = datetime.now()
-            print(end - start)
+            logging.info(end - start)
     except Exception as e:
-        print(e)
-        traceback.print_exc()
+        logging.error(e)
+        logging.error(traceback.format_exc())

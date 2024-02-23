@@ -1,15 +1,19 @@
-import sys
+import logging
 import traceback
 from datetime import datetime
 from pathlib import Path
 
 import pandas as pd
-from inesdata_mov_datasets.settings import Settings
 
+from inesdata_mov_datasets.settings import Settings
 from inesdata_mov_datasets.sources.emt.create.calendar.create import create_calendar_emt
 from inesdata_mov_datasets.sources.emt.create.eta.create import create_eta_emt
 from inesdata_mov_datasets.sources.emt.create.line_detail.create import create_line_detail_emt
-from inesdata_mov_datasets.utils import read_settings
+
+# Logger
+logging.basicConfig(
+    filename="app.log", level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s"
+)
 
 
 def join_calendar_line_datasets(calendar_df: pd.DataFrame, line_df: pd.DataFrame) -> pd.DataFrame:
@@ -23,13 +27,13 @@ def join_calendar_line_datasets(calendar_df: pd.DataFrame, line_df: pd.DataFrame
         pd.DataFrame: joined dataset
     """
     try:
-        calendar_line_df = line_df.merge(calendar_df, on=["date", 'dayType'])
+        calendar_line_df = line_df.merge(calendar_df, on=["date", "dayType"])
         calendar_line_df.drop(columns="datetime_y", inplace=True)
         calendar_line_df.rename(columns={"datetime_x": "datetime"}, inplace=True)
         return calendar_line_df
     except Exception as e:
-        print(e)
-        traceback.print_exc()
+        logging.error(e)
+        logging.error(traceback.format_exc())
         return pd.DataFrame([])
 
 
@@ -50,8 +54,8 @@ def join_eta_dataset(calendar_line_df: pd.DataFrame, eta_df: pd.DataFrame) -> pd
         df.rename(columns={"datetime_x": "datetime"}, inplace=True)
         return df
     except Exception as e:
-        print(e)
-        traceback.print_exc()
+        logging.error(e)
+        logging.error(traceback.format_exc())
         return pd.DataFrame([])
 
 
@@ -64,7 +68,7 @@ def create_emt(settings: Settings, date: str):
     """
     start = datetime.now()
     storage_path = settings.storage.config.local.path
-    print(f"Generating EMT dataset for date: {date}")
+    logging.info(f"Generating EMT dataset for date: {date}")
     try:
         start = datetime.now()
         calendar_df = create_calendar_emt(settings, date)
@@ -81,14 +85,14 @@ def create_emt(settings: Settings, date: str):
             Path(storage_path + f"/processed/emt/{date}").mkdir(parents=True, exist_ok=True)
             processed_storage_path = storage_path + f"/processed/emt/{date}"
             df.to_csv(processed_storage_path + "/emt_processed.csv")
-            print(df.shape)
+            print(f"Created EMT df {df.shape}")
         else:
-            print('There is no data to create')
+            print("There is no data to create")
         end = datetime.now()
-        print(end - start)
+        logging.info(end - start)
     except Exception as e:
-        print(e)
-        traceback.print_exc()
+        logging.error(e)
+        logging.error(traceback.format_exc())
 
     end = datetime.now()
-    print(end - start)
+    logging.info(end - start)

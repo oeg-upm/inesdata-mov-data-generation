@@ -1,16 +1,21 @@
 import asyncio
 import json
+import logging
 import os
-import sys
 import tempfile
 import traceback
 from datetime import datetime
 from pathlib import Path
 
 import pandas as pd
-from inesdata_mov_datasets.settings import Settings
 
-from inesdata_mov_datasets.utils import download_objs, read_settings
+from inesdata_mov_datasets.settings import Settings
+from inesdata_mov_datasets.utils import download_objs
+
+# Logger
+logging.basicConfig(
+    filename="app.log", level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s"
+)
 
 
 def download_eta(
@@ -64,8 +69,8 @@ def generate_df_from_file(content: dict) -> pd.DataFrame:
                 day_df["positionBusLat"] = day_df["positionBus"].apply(pd.Series)[1]
                 day_df = day_df.drop(columns=["geometry", "positionBus"])
     except Exception as e:
-        print(e)
-        traceback.print_exc()
+        logging.error(e)
+        logging.error(traceback.format_exc())
     return day_df
 
 
@@ -82,9 +87,9 @@ def generate_day_df(storage_path: str, date: str) -> pd.DataFrame:
     dfs = []
     Path(storage_path + f"/raw/emt/{date}/eta").mkdir(parents=True, exist_ok=True)
     files = os.listdir(storage_path + f"/raw/emt/{date}/eta/")
-    print(f"files count: {len(files)}")
+    logging.info(f"files count: {len(files)}")
     for file in files:
-        print(f"generating df from {file}")
+        logging.info(f"generating df from {file}")
         with open(storage_path + f"/raw/emt/{date}/eta/" + file, "r") as f:
             content = json.load(f)
         df = generate_df_from_file(content)
@@ -98,7 +103,7 @@ def generate_day_df(storage_path: str, date: str) -> pd.DataFrame:
         Path(storage_path + f"/processed/emt/{date}").mkdir(parents=True, exist_ok=True)
         processed_storage_path = storage_path + f"/processed/emt/{date}"
         final_df.to_csv(processed_storage_path + "/eta_processed.csv")
-        print(final_df.shape)
+        print(f"Created EMT ETA df {final_df.shape}")
         return final_df
     else:
         return pd.DataFrame([])
@@ -115,14 +120,14 @@ def create_eta_emt(settings: Settings, date: str) -> pd.DataFrame:
         pd.DataFrame: df from EMT ETA endpoint
     """
     # Download day's raw data from minio
-    print(f"Generating EMT ETA dataset for date: {date}")
+    logging.info(f"Generating EMT ETA dataset for date: {date}")
 
     with tempfile.TemporaryDirectory() as tmpdirname:
-        print(tmpdirname)
+        logging.debug(tmpdirname)
         start = datetime.now()
         storage_config = settings.storage.config
         storage_path = storage_config.local.path  # tmpdirname
-        if settings.storage.default != 'local':
+        if settings.storage.default != "local":
             download_eta(
                 bucket=storage_config.minio.bucket,
                 prefix=f"raw/emt/{date}/eta/",
@@ -134,5 +139,5 @@ def create_eta_emt(settings: Settings, date: str) -> pd.DataFrame:
         df = generate_day_df(storage_path=storage_path, date=date)
 
         end = datetime.now()
-        print(end - start)
+        logging.info(end - start)
         return df
