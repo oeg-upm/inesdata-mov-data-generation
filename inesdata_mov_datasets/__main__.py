@@ -42,9 +42,6 @@ def extract(
     """Extract raw data from the sources configurated."""
     # read settings
     config = read_settings(config_path)
-
-    # read settings
-    config = read_settings(config_path)
     
     if config.storage.default == 'minio':
         minio_client = minio_connection(config)
