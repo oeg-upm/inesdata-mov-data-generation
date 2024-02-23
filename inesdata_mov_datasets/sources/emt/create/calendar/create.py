@@ -63,7 +63,7 @@ def generate_df_from_file(content: dict) -> pd.DataFrame:
     return day_df
 
 
-def generate_day_df(storage_path: str, date: str):
+def generate_day_df(storage_path: str, date: str) -> pd.DataFrame:
     """Generate a day's pandas dataframe from a whole day's files downloaded from MinIO.
 
     Args:
@@ -83,15 +83,18 @@ def generate_day_df(storage_path: str, date: str):
         df = generate_df_from_file(content[0])
         dfs.append(df)
 
-    final_df = pd.concat(dfs)
-    # sort values
-    final_df = final_df.sort_values(by=["datetime"])
-    # export final df
-    Path(storage_path + f"/processed/emt/{date}").mkdir(parents=True, exist_ok=True)
-    processed_storage_path = storage_path + f"/processed/emt/{date}"
-    final_df.to_csv(processed_storage_path + "/calendar_processed.csv")
-    print(final_df.shape)
-    return final_df
+    if len(dfs) > 0:
+        final_df = pd.concat(dfs)
+        # sort values
+        final_df = final_df.sort_values(by=["datetime"])
+        # export final df
+        Path(storage_path + f"/processed/emt/{date}").mkdir(parents=True, exist_ok=True)
+        processed_storage_path = storage_path + f"/processed/emt/{date}"
+        final_df.to_csv(processed_storage_path + "/calendar_processed.csv")
+        print(final_df.shape)
+        return final_df
+    else:
+        return pd.DataFrame([])
 
 
 def create_calendar_emt(date: str) -> pd.DataFrame:
@@ -111,23 +114,18 @@ def create_calendar_emt(date: str) -> pd.DataFrame:
         print(tmpdirname)
         start = datetime.now()
         storage_config = settings.storage.config
-        download_calendar(
-            bucket=storage_config.minio.bucket,
-            prefix=f"raw/emt/{date}/calendar/",
-            output_path=tmpdirname,
-            endpoint_url=storage_config.minio.endpoint,
-            aws_access_key_id=storage_config.minio.access_key,
-            aws_secret_access_key=storage_config.minio.secret_key,
-        )
-        df = generate_day_df(storage_path=tmpdirname, date=date)
+        storage_path = storage_config.local.path  # tmpdirname
+        if settings.storage.default != 'local':
+            download_calendar(
+                bucket=storage_config.minio.bucket,
+                prefix=f"raw/emt/{date}/calendar/",
+                output_path=storage_path,
+                endpoint_url=storage_config.minio.endpoint,
+                aws_access_key_id=storage_config.minio.access_key,
+                aws_secret_access_key=storage_config.minio.secret_key,
+            )
+        df = generate_day_df(storage_path=storage_path, date=date)
 
         end = datetime.now()
         print(end - start)
         return df
-
-
-if __name__ == "__main__":
-    # Download day's raw data from minio
-    date = sys.argv[1] if len(sys.argv) > 1 else datetime.today().strftime("%Y/%m/%d")
-    # date = datetime.strptime('2024/02/09', '%Y/%m/%d').strftime('%Y/%m/%d')
-    create_calendar_emt(date)

@@ -2,12 +2,14 @@ import asyncio
 import json
 import os
 import sys
+import tempfile
 import traceback
 from datetime import datetime
 from pathlib import Path
 
 import pandas as pd
 
+from inesdata_mov_datasets.settings import Settings
 from inesdata_mov_datasets.utils import download_objs, read_settings
 
 
@@ -78,35 +80,46 @@ def generate_day_df(storage_path: str, date: str):
         df = generate_df_from_file(content["pms"])
         dfs.append(df)
 
-    final_df = pd.concat(dfs)
-    # sort values
-    final_df = final_df.sort_values(by="datetime")
-    # export final df
-    Path(storage_path + f"/processed/informo/{date}").mkdir(parents=True, exist_ok=True)
-    processed_storage_path = storage_path + f"/processed/informo/{date}"
-    final_df.to_csv(processed_storage_path + "/informo_processed.csv")
-    print(final_df.shape)
+    if len(dfs) > 0:
+        final_df = pd.concat(dfs)
+        # sort values
+        final_df = final_df.sort_values(by="datetime")
+        # export final df
+        Path(storage_path + f"/processed/informo/{date}").mkdir(parents=True, exist_ok=True)
+        processed_storage_path = storage_path + f"/processed/informo/{date}"
+        final_df.to_csv(processed_storage_path + "/informo_processed.csv")
+        print(final_df.shape)
 
 
-if __name__ == "__main__":
-    start = datetime.now()
+def create_informo(settings: Settings, date: str):
+    """Create dataset from Informo endpoint.
 
-    settings = read_settings(path="/home/code/inesdata-mov/data-generation/config_dev.yaml")
-    # Download day's raw data from minio
-    date = sys.argv[1] if len(sys.argv) > 1 else datetime.today().strftime("%Y/%m/%d")
-    # date = datetime.strptime('2024/02/09', '%Y/%m/%d').strftime('%Y/%m/%d')
-    print(f"Generating Informo dataset for date: {date}")
+    Args:
+        settings (Settings): project settings
+        date (str): a date formatted in YYYY/MM/DD
+    """
+    try:
+        # Download day's raw data from minio
+        print(f"Generating Informo dataset for date: {date}")
 
-    storage_config = settings.storage.config
-    download_informo(
-        bucket=storage_config.minio.bucket,
-        prefix=f"raw/informo/{date}/",
-        output_path=storage_config.local.path,
-        endpoint_url=storage_config.minio.endpoint,
-        aws_access_key_id=storage_config.minio.access_key,
-        aws_secret_access_key=storage_config.minio.secret_key,
-    )
-    generate_day_df(storage_path=storage_config.local.path, date=date)
+        with tempfile.TemporaryDirectory() as tmpdirname:
+            print(tmpdirname)
+            start = datetime.now()
+            storage_config = settings.storage.config
+            storage_path = storage_config.local.path  # tmpdirname
+            if settings.storage.default != 'local':
+                download_informo(
+                    bucket=storage_config.minio.bucket,
+                    prefix=f"raw/informo/{date}/",
+                    output_path=storage_path,
+                    endpoint_url=storage_config.minio.endpoint,
+                    aws_access_key_id=storage_config.minio.access_key,
+                    aws_secret_access_key=storage_config.minio.secret_key,
+                )
+            generate_day_df(storage_path=storage_path, date=date)
 
-    end = datetime.now()
-    print(end - start)
+            end = datetime.now()
+            print(end - start)
+    except Exception as e:
+        print(e)
+        traceback.print_exc()

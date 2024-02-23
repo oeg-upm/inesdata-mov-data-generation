@@ -1,4 +1,5 @@
 """Gather raw data from aemet."""
+import os
 import datetime
 import io
 import json

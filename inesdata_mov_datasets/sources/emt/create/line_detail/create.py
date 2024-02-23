@@ -60,7 +60,7 @@ def generate_df_from_file(content: dict) -> pd.DataFrame:
                 # Add line col
                 day_df["line"] = content["data"][0]["line"]
                 # rename day type col to be the same as in calendar
-                day_df.rename(columns={'idDayType': 'dayType'}, inplace=True)
+                day_df.rename(columns={"idDayType": "dayType"}, inplace=True)
                 # Get selected cols
                 day_df = day_df[
                     [
@@ -101,15 +101,18 @@ def generate_day_df(storage_path: str, date: str) -> pd.DataFrame:
         df = generate_df_from_file(content)
         dfs.append(df)
 
-    final_df = pd.concat(dfs)
-    # sort values
-    final_df = final_df.sort_values(by=["datetime", "line"])
-    # export final df
-    Path(storage_path + f"/processed/emt/{date}").mkdir(parents=True, exist_ok=True)
-    processed_storage_path = storage_path + f"/processed/emt/{date}"
-    final_df.to_csv(processed_storage_path + "/line_detail_processed.csv")
-    print(final_df.shape)
-    return final_df
+    if len(dfs) > 0:
+        final_df = pd.concat(dfs)
+        # sort values
+        final_df = final_df.sort_values(by=["datetime", "line"])
+        # export final df
+        Path(storage_path + f"/processed/emt/{date}").mkdir(parents=True, exist_ok=True)
+        processed_storage_path = storage_path + f"/processed/emt/{date}"
+        final_df.to_csv(processed_storage_path + "/line_detail_processed.csv")
+        print(final_df.shape)
+        return final_df
+    else:
+        return pd.DataFrame([])
 
 
 def create_line_detail_emt(date: str) -> pd.DataFrame:
@@ -126,25 +129,21 @@ def create_line_detail_emt(date: str) -> pd.DataFrame:
     print(f"Generating EMT line_detail dataset for date: {date}")
 
     with tempfile.TemporaryDirectory() as tmpdirname:
+        print(tmpdirname)
         start = datetime.now()
         storage_config = settings.storage.config
-        download_line_detail(
-            bucket=storage_config.minio.bucket,
-            prefix=f"raw/emt/{date}/line_detail/",
-            output_path=tmpdirname,
-            endpoint_url=storage_config.minio.endpoint,
-            aws_access_key_id=storage_config.minio.access_key,
-            aws_secret_access_key=storage_config.minio.secret_key,
-        )
-        df = generate_day_df(storage_path=tmpdirname, date=date)
+        storage_path = storage_config.local.path  # tmpdirname
+        if settings.storage.default != 'local':
+            download_line_detail(
+                bucket=storage_config.minio.bucket,
+                prefix=f"raw/emt/{date}/line_detail/",
+                output_path=storage_path,
+                endpoint_url=storage_config.minio.endpoint,
+                aws_access_key_id=storage_config.minio.access_key,
+                aws_secret_access_key=storage_config.minio.secret_key,
+            )
+        df = generate_day_df(storage_path=storage_path, date=date)
 
         end = datetime.now()
         print(end - start)
         return df
-
-
-if __name__ == "__main__":
-    # Download day's raw data from minio
-    date = sys.argv[1] if len(sys.argv) > 1 else datetime.today().strftime("%Y/%m/%d")
-    # date = datetime.strptime('2024/02/09', '%Y/%m/%d').strftime('%Y/%m/%d')
-    create_line_detail_emt(date)
