@@ -85,12 +85,14 @@ def generate_day_df(storage_path: str, date: str) -> pd.DataFrame:
         pd.DataFrame: day's pandas dataframe
     """
     dfs = []
-    Path(storage_path + f"/raw/emt/{date}/eta").mkdir(parents=True, exist_ok=True)
-    files = os.listdir(storage_path + f"/raw/emt/{date}/eta/")
+    raw_storage_dir = Path(storage_path) / Path("raw") / "emt" / date / "eta"
+    raw_storage_dir.mkdir(parents=True, exist_ok=True)
+    files = os.listdir(raw_storage_dir)
     logging.info(f"files count: {len(files)}")
     for file in files:
         logging.info(f"generating df from {file}")
-        with open(storage_path + f"/raw/emt/{date}/eta/" + file, "r") as f:
+        filename = raw_storage_dir / file
+        with open(filename, "r") as f:
             content = json.load(f)
         df = generate_df_from_file(content)
         dfs.append(df)
@@ -100,9 +102,9 @@ def generate_day_df(storage_path: str, date: str) -> pd.DataFrame:
         # sort values
         final_df = final_df.sort_values(by=["datetime", "bus", "line", "stop"])
         # export final df
-        Path(storage_path + f"/processed/emt/{date}").mkdir(parents=True, exist_ok=True)
-        processed_storage_path = storage_path + f"/processed/emt/{date}"
-        final_df.to_csv(processed_storage_path + "/eta_processed.csv")
+        # processed_storage_dir = Path(storage_path) / Path("processed") / "emt" / date
+        # Path(processed_storage_dir).mkdir(parents=True, exist_ok=True)
+        # final_df.to_csv(processed_storage_dir / "eta_processed.csv", index=None)
         print(f"Created EMT ETA df {final_df.shape}")
         return final_df
     else:

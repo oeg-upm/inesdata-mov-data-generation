@@ -93,12 +93,14 @@ def generate_day_df(storage_path: str, date: str):
         date (str): a date formatted in YYYY/MM/DD
     """
     dfs = []
-    Path(storage_path + f"/raw/aemet/{date}").mkdir(parents=True, exist_ok=True)
-    files = os.listdir(storage_path + f"/raw/aemet/{date}/")
+    raw_storage_dir = Path(storage_path) / Path("raw") / "aemet" / date
+    raw_storage_dir.mkdir(parents=True, exist_ok=True)
+    files = os.listdir(raw_storage_dir)
     logging.info(f"files count: {len(files)}")
     for file in files:
         logging.info(f"generating df from {file}")
-        with open(storage_path + f"/raw/aemet/{date}/" + file, "r") as f:
+        filename = raw_storage_dir / file
+        with open(filename, "r") as f:
             content = json.load(f)
         df = generate_df_from_file(content, date)
         dfs.append(df)
@@ -117,9 +119,9 @@ def generate_day_df(storage_path: str, date: str):
         # sort values
         final_df = final_df.sort_values(by="datetime")
         # export final df
-        Path(storage_path + f"/processed/aemet/{date}").mkdir(parents=True, exist_ok=True)
-        processed_storage_path = storage_path + f"/processed/aemet/{date}"
-        final_df.to_csv(processed_storage_path + "/aemet_processed.csv")
+        processed_storage_dir = Path(storage_path) / Path("processed") / "aemet" / date
+        Path(processed_storage_dir).mkdir(parents=True, exist_ok=True)
+        final_df.to_csv(processed_storage_dir / "aemet_processed.csv", index=None)
         print(f"Created AEMET df {final_df.shape}")
     else:
         print("There is no data to create")

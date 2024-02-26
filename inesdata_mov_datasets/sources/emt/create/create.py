@@ -84,7 +84,7 @@ def create_emt(settings: Settings, date: str):
             # export final df
             Path(storage_path + f"/processed/emt/{date}").mkdir(parents=True, exist_ok=True)
             processed_storage_path = storage_path + f"/processed/emt/{date}"
-            df.to_csv(processed_storage_path + "/emt_processed.csv")
+            df.to_csv(processed_storage_path + "/emt_processed.csv", index=None)
             print(f"Created EMT df {df.shape}")
         else:
             print("There is no data to create")
