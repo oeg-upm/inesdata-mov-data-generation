@@ -102,15 +102,21 @@ def create(
     for date in dates:
         date_formatted = date.strftime("%Y/%m/%d")
         if sources.value == sources.emt or sources.value == sources.all:
-            print("EMT")
+            print("Creating EMT")
             create_emt(settings=settings, date=date_formatted)
+            print("Created EMT")
+            print("- - - - - - -")
         if sources.value == sources.aemet or sources.value == sources.all:
-            print("AEMET")
+            print("Creating AEMET")
             create_aemet(settings=settings, date=date_formatted)
+            print("Created AEMET")
+            print("- - - - - - -")
         if sources.value == sources.informo or sources.value == sources.all:
-            print("INFORMO")
+            print("Creating INFORMO")
             create_informo(settings=settings, date=date_formatted)
-
+            print("Created INFORMO")
+            print("- - - - - - -")
+    print("Created data")
 
 if __name__ == "__main__":
     app()

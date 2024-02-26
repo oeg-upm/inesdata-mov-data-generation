@@ -23,11 +23,11 @@ async def get_line_detail(
         json: Response of the petition in json format.
     """
     line_detail_url = (
-        f"https://openapi.emtmadrid.es/v1/transport/busemtmad/lines/{line_id}/info/{date}"
+        f"https://openapi.emtmadrid.es/v1/transport/busemtmad/lines/{line_id}/info/{date}/"
     )
     async with session.get(line_detail_url, headers=headers) as response:
         try:
             return await response.json()
         except ContentTypeError:
-            print("Error in line_detail call line", line_id)
+            #print("Error in line_detail call line", line_id)
             return -1

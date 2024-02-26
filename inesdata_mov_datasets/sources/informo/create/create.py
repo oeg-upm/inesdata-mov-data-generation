@@ -128,6 +128,7 @@ def create_informo(settings: Settings, date: str):
             generate_day_df(storage_path=storage_path, date=date)
 
             end = datetime.now()
+            print("Time duration", end - start)
             logging.info(end - start)
     except Exception as e:
         logging.error(e)

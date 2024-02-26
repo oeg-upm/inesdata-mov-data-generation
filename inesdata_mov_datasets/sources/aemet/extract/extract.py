@@ -19,6 +19,8 @@ def get_aemet(config: Settings, minio_client: Minio=None):
         config (Settings): Object with the config file.
     """
     print("EXTRACTING AEMET")
+    now = datetime.datetime.now()
+    
     url_madrid = (
         "https://opendata.aemet.es/opendata/api/prediccion/especifica/municipio/horaria/28079"
     )
@@ -34,6 +36,8 @@ def get_aemet(config: Settings, minio_client: Minio=None):
 
     save_aemet(config, r_json, minio_client)
     
+    end = datetime.datetime.now()
+    print("Time duration", end - now)
     print("EXTRACTED AEMET")
     print("- - - - - - -")
 

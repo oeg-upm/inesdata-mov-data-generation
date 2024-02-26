@@ -50,7 +50,7 @@ def login_emt(
             "Accept": "application/json",
         }
     r = requests.get(
-        "https://openapi.emtmadrid.es/v2/mobilitylabs/user/login/", headers=headers, verify=False
+        "https://openapi.emtmadrid.es/v2/mobilitylabs/user/login/", headers=headers, verify=True
     )
     login_json = r.json()
     login_json_str = json.dumps(login_json)
@@ -227,7 +227,7 @@ async def get_emt(config: Settings, minio_client: Minio = None):
                 else:
                     lines_called += 1
 
-        print("Already called " + str(lines_called) + "lines")
+        #print("Already called " + str(lines_called) + "lines")
 
         if config.storage.default == "minio":
             object_calendar_name = (
@@ -244,7 +244,8 @@ async def get_emt(config: Settings, minio_client: Minio = None):
                 )
                 calendar_tasks.append(calendar_task)
             else:
-                print("Already called Calendar")
+                pass
+                #print("Already called Calendar")
 
         if config.storage.default == "local":
             object_calendar_name = f"calendar_{formatted_date_day}.json"
@@ -262,7 +263,8 @@ async def get_emt(config: Settings, minio_client: Minio = None):
                 )
                 calendar_tasks.append(calendar_task)
             else:
-                print("Already called Calendar")
+                pass
+                #print("Already called Calendar")
 
         # Make requests to the eta for each stop
         for stop_id in config.sources.emt.stops:
@@ -308,7 +310,8 @@ async def get_emt(config: Settings, minio_client: Minio = None):
                     else:
                         errors_ld += 1
                 except:
-                    print("Error for line ", line_id, "Line detail ")
+                    pass
+                    #print("Error for line ", line_id, "Line detail ")
 
         # Store the calendar response in MinIO if present
         if calendar_response:
@@ -329,9 +332,11 @@ async def get_emt(config: Settings, minio_client: Minio = None):
                         ) as file:
                             file.write(calendar_json_str)
                 else:
-                    print("Error in calendar")
+                    pass
+                    #print("Error in calendar")
             except:
-                print("Error for calendar endpoint")
+                pass
+                #print("Error for calendar endpoint")
 
         # Store the bus stop responses in MinIO
         list_stops_error = []
@@ -373,10 +378,10 @@ async def get_emt(config: Settings, minio_client: Minio = None):
             except:
                 errors_eta += 1
                 list_stops_error.append(stop_id)
-                print("Error for stop ", stop_id, "Time arrival")
+                #print("Error for stop ", stop_id, "Time arrival")
 
-        print("Errors in Line Detail: ", errors_ld)
-        print("Errors in ETA:", errors_eta, "list of stops erroring:", list_stops_error)
+        #print("Errors in Line Detail: ", errors_ld)
+        #print("Errors in ETA:", errors_eta, "list of stops erroring:", list_stops_error)
 
         if errors_eta > 0:
             list_stops_error_retry = []
@@ -430,17 +435,17 @@ async def get_emt(config: Settings, minio_client: Minio = None):
                         list_stops_error_retry.append(stop_id)
 
                 except:
-                    print("Error for stop ", stop_id, "Time arrival ")
+                    #print("Error for stop ", stop_id, "Time arrival ")
                     errors_eta_retry += 1
                     list_stops_error_retry.append(stop_id)
 
-        print(
+        '''print(
             "Errors in ETA AFTER RETRYING:",
             errors_eta_retry,
             "list of stops erroring AFTER RETRYING:",
             list_stops_error_retry,
-        )
+        )'''
         end = datetime.datetime.now()
-        print("Time ", end - now)
+        print("Time duration", end - now)
         print("EXTRACTED EMT")
         print("- - - - - - -")
