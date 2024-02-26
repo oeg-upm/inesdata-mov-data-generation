@@ -1,11 +1,11 @@
 """Command line interface for inesdata_mov_datasets."""
 
+import asyncio
 from datetime import datetime, timedelta
 from enum import Enum
 
 import pandas as pd
 import typer
-import asyncio
 
 from inesdata_mov_datasets.sources.aemet.create.create import create_aemet
 from inesdata_mov_datasets.sources.aemet.extract.extract import get_aemet
@@ -42,30 +42,29 @@ def extract(
     """Extract raw data from the sources configurated."""
     # read settings
     config = read_settings(config_path)
-    
-    if config.storage.default == 'minio':
+
+    if config.storage.default == "minio":
         minio_client = minio_connection(config)
-        #EMT
+        # EMT
         if sources.value == sources.emt or sources.value == sources.all:
             asyncio.run(get_emt(config, minio_client))
-        #Aemet
+        # Aemet
         if sources.value == sources.aemet or sources.value == sources.all:
             get_aemet(config, minio_client)
-        #Informo
+        # Informo
         if sources.value == sources.informo or sources.value == sources.all:
             get_informo(config, minio_client)
-            
-    if config.storage.default == 'local':
-        #EMT
+
+    if config.storage.default == "local":
+        # EMT
         if sources.value == sources.emt or sources.value == sources.all:
             asyncio.run(get_emt(config))
-        #Aemet
+        # Aemet
         if sources.value == sources.aemet or sources.value == sources.all:
             get_aemet(config)
-        #Informo
+        # Informo
         if sources.value == sources.informo or sources.value == sources.all:
             get_informo(config)
-        
 
     print("Extracted data")
 
@@ -77,12 +76,12 @@ def create(
         help="Path to configuration yaml file",
     ),
     start_date: datetime = typer.Option(
-        default=datetime.today().strftime("%Y%m%d"),
+        default=datetime.today(),
         formats=["%Y%m%d"],
         help="Start date in format YYYYMMDD",
     ),
     end_date: datetime = typer.Option(
-        default=datetime.today().strftime("%Y%m%d"),
+        default=(datetime.today() + timedelta(days=1)),
         formats=["%Y%m%d"],
         help="End date in format YYYYMMDD",
     ),
@@ -96,10 +95,10 @@ def create(
     """
     # read settings
     settings = read_settings(config_path)
-    print(f"Create {sources.value} dataset from {start_date} to {end_date}")
-    dates = pd.date_range(
-        pd.to_datetime(start_date), pd.to_datetime(end_date), freq="d"
+    print(
+        f"Create {sources.value} dataset from {start_date.strftime('%Y/%m/%d')} to {end_date.strftime('%Y/%m/%d')}"
     )
+    dates = pd.date_range(start_date, end_date - timedelta(days=1), freq="d")
     for date in dates:
         date_formatted = date.strftime("%Y/%m/%d")
         if sources.value == sources.emt or sources.value == sources.all:
