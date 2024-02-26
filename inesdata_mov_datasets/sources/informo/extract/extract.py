@@ -20,6 +20,7 @@ def get_informo(config: Settings, minio_client: Minio=None):
         config (Settings): Object with the config file.
     """
     print("EXTRACTING INFORMO")
+    now = datetime.datetime.now()
     url_informo = (
         "https://informo.madrid.es/informo/tmadrid/pm.xml"
     )
@@ -32,6 +33,9 @@ def get_informo(config: Settings, minio_client: Minio=None):
         print("Error:", r.status_code)
         
     save_informo(config, xml_dict, minio_client)
+    
+    end = datetime.datetime.now()
+    print("Time duration", end - now)
     
     print("EXTRACTED INFORMO")
     print("- - - - - - -")

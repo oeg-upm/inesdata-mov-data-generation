@@ -95,4 +95,5 @@ def create_emt(settings: Settings, date: str):
         logging.error(traceback.format_exc())
 
     end = datetime.now()
+    print("Time duration", end - start)
     logging.info(end - start)
