@@ -93,9 +93,10 @@ def generate_day_df(storage_path: str, date: str):
         final_df = final_df.sort_values(by="datetime")
         # export final df
         processed_storage_dir = Path(storage_path) / Path("processed") / "informo" / date
+        date_formatted = date.replace("/", "")
         Path(processed_storage_dir).mkdir(parents=True, exist_ok=True)
-        final_df.to_csv(processed_storage_dir / "informo_processed.csv", index=None)
-        print(f"Created INFORMO df {final_df.shape}")
+        final_df.to_csv(processed_storage_dir / f"informo_{date_formatted}.csv", index=None)
+        print(f"Created INFORMO df of shape {final_df.shape}")
     else:
         print("There is no data to create")
 
@@ -109,6 +110,7 @@ def create_informo(settings: Settings, date: str):
     """
     try:
         # Download day's raw data from minio
+        print("Creating INFORMO")
         logging.info(f"Generating Informo dataset for date: {date}")
 
         with tempfile.TemporaryDirectory() as tmpdirname:

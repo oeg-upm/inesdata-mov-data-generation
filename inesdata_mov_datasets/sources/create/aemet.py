@@ -120,9 +120,10 @@ def generate_day_df(storage_path: str, date: str):
         final_df = final_df.sort_values(by="datetime")
         # export final df
         processed_storage_dir = Path(storage_path) / Path("processed") / "aemet" / date
+        date_formatted = date.replace("/", "")
         Path(processed_storage_dir).mkdir(parents=True, exist_ok=True)
-        final_df.to_csv(processed_storage_dir / "aemet_processed.csv", index=None)
-        print(f"Created AEMET df {final_df.shape}")
+        final_df.to_csv(processed_storage_dir / f"aemet_{date_formatted}.csv", index=None)
+        print(f"Created AEMET df of shape {final_df.shape}")
     else:
         print("There is no data to create")
 
@@ -136,6 +137,7 @@ def create_aemet(settings: Settings, date: str):
     """
     try:
         # Download day's raw data from minio
+        print("Creating AEMET")
         logging.info(f"Generating AEMET dataset for date: {date}")
 
         with tempfile.TemporaryDirectory() as tmpdirname:

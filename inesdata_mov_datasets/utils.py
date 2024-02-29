@@ -11,6 +11,32 @@ from minio.error import S3Error
 from inesdata_mov_datasets.settings import Settings
 
 
+def async_download(
+    bucket: str,
+    prefix: str,
+    output_path: str,
+    endpoint_url: str,
+    aws_access_key_id: str,
+    aws_secret_access_key: str,
+):
+    """Download from minIO a day's raw data of an EMT's endpoint.
+
+    Args:
+        bucket (str): bucket name
+        prefix (str): path to raw data directory from minio
+        output_path (str): local path to store output from minio
+        endpoint_url (str): url of minio bucket
+        aws_access_key_id (str): minio user
+        aws_secret_access_key (str): minio password
+    """
+    loop = asyncio.new_event_loop()
+    loop.run_until_complete(
+        download_objs(
+            bucket, prefix, output_path, endpoint_url, aws_access_key_id, aws_secret_access_key
+        )
+    )
+
+
 async def list_objs(client, bucket, prefix):
     paginator = client.get_paginator("list_objects")
     keys = []

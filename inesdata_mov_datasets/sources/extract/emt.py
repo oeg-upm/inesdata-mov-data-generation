@@ -9,16 +9,93 @@ from pathlib import Path
 import aiohttp
 import pytz
 import requests
+from aiohttp.client_exceptions import ContentTypeError
 from minio import Minio
 
 from inesdata_mov_datasets.settings import Settings
-from inesdata_mov_datasets.sources.emt.extract.calendar.extract import get_calendar
-from inesdata_mov_datasets.sources.emt.extract.eta.extract import get_eta
-from inesdata_mov_datasets.sources.emt.extract.line_detail.extract import get_line_detail
-from inesdata_mov_datasets.utils import (
-    check_local_file_exists,
-    check_minio_file_exists,
-)
+from inesdata_mov_datasets.utils import check_local_file_exists, check_minio_file_exists
+
+
+async def get_calendar(
+    session: aiohttp,
+    startDate: str,
+    endDate: str,
+    headers: json,
+) -> json:
+    """Call Calendar endpoint EMT.
+
+    Args:
+        session (aiohttp): Call session to make faster the calls to the same API.
+        startDate (str): Start date of the date you want to check.
+        endDate (str): End date of the date you want to check.
+        headers (json): Headers of the http petition.
+
+    Returns:
+        json: Response of the petition in json format.
+    """
+    calendar_url = (
+        f"https://openapi.emtmadrid.es/v1/transport/busemtmad/calendar/{startDate}/{endDate}/"
+    )
+    async with session.get(calendar_url, headers=headers) as response:
+        try:
+            return await response.json()
+        except ContentTypeError:
+            # print("Error in calendar call")
+            return -1
+
+
+async def get_line_detail(
+    session: aiohttp,
+    date: str,
+    line_id: str,
+    headers: json,
+) -> json:
+    """Call line_detail endpoint EMT.
+
+    Args:
+        session (aiohttp): Call session to make faster the calls to the same API.
+        date (str): Date reference of the petition (we use the date of the done petition).
+        line_id (str): Id of the line.
+        headers (json): Headers of the petition.
+
+    Returns:
+        json: Response of the petition in json format.
+    """
+    line_detail_url = (
+        f"https://openapi.emtmadrid.es/v1/transport/busemtmad/lines/{line_id}/info/{date}/"
+    )
+    async with session.get(line_detail_url, headers=headers) as response:
+        try:
+            return await response.json()
+        except ContentTypeError:
+            # print("Error in line_detail call line", line_id)
+            return -1
+
+
+async def get_eta(session: aiohttp, stop_id: str, headers: json) -> json:
+    """Make the API call to ETA endpoint.
+
+    Args:
+        session (aiohttp): Call session to make faster the calls to the same API.
+        stop_id (str): Id of the bus stop.
+        headers (json): Headers of the http call.
+
+    Returns:
+        json: Response of the petition in json format.
+    """
+    body = {
+        "cultureInfo": "ES",
+        "Text_StopRequired_YN": "N",
+        "Text_EstimationsRequired_YN": "Y",
+        "Text_IncidencesRequired_YN": "N",
+    }
+    eta_url = f"https://openapi.emtmadrid.es/v2/transport/busemtmad/stops/{stop_id}/arrives/"
+    async with session.post(eta_url, headers=headers, json=body) as response:
+        try:
+            return await response.json()
+        except ContentTypeError:
+            # print("Error in ETA call stop", stop_id)
+            return -1
 
 
 def login_emt(
@@ -151,7 +228,6 @@ async def get_emt(config: Settings, minio_client: Minio = None):
         config (Settings): Object with the config file..
         minio_client (Minio, optional): Object with Minio connection. Defaults to None.
     """
-    
     print("EXTRACTING EMT")
     europe_timezone = pytz.timezone("Europe/Madrid")
     current_datetime = datetime.datetime.now(europe_timezone).replace(second=0)
@@ -227,7 +303,7 @@ async def get_emt(config: Settings, minio_client: Minio = None):
                 else:
                     lines_called += 1
 
-        #print("Already called " + str(lines_called) + "lines")
+        # print("Already called " + str(lines_called) + "lines")
 
         if config.storage.default == "minio":
             object_calendar_name = (
@@ -245,7 +321,7 @@ async def get_emt(config: Settings, minio_client: Minio = None):
                 calendar_tasks.append(calendar_task)
             else:
                 pass
-                #print("Already called Calendar")
+                # print("Already called Calendar")
 
         if config.storage.default == "local":
             object_calendar_name = f"calendar_{formatted_date_day}.json"
@@ -264,7 +340,7 @@ async def get_emt(config: Settings, minio_client: Minio = None):
                 calendar_tasks.append(calendar_task)
             else:
                 pass
-                #print("Already called Calendar")
+                # print("Already called Calendar")
 
         # Make requests to the eta for each stop
         for stop_id in config.sources.emt.stops:
@@ -309,9 +385,9 @@ async def get_emt(config: Settings, minio_client: Minio = None):
                                 file.write(response_json_str)
                     else:
                         errors_ld += 1
-                except:
+                except Exception:
                     pass
-                    #print("Error for line ", line_id, "Line detail ")
+                    # print("Error for line ", line_id, "Line detail ")
 
         # Store the calendar response in MinIO if present
         if calendar_response:
@@ -333,10 +409,10 @@ async def get_emt(config: Settings, minio_client: Minio = None):
                             file.write(calendar_json_str)
                 else:
                     pass
-                    #print("Error in calendar")
+                    # print("Error in calendar")
             except:
                 pass
-                #print("Error for calendar endpoint")
+                # print("Error for calendar endpoint")
 
         # Store the bus stop responses in MinIO
         list_stops_error = []
@@ -378,10 +454,10 @@ async def get_emt(config: Settings, minio_client: Minio = None):
             except:
                 errors_eta += 1
                 list_stops_error.append(stop_id)
-                #print("Error for stop ", stop_id, "Time arrival")
+                # print("Error for stop ", stop_id, "Time arrival")
 
-        #print("Errors in Line Detail: ", errors_ld)
-        #print("Errors in ETA:", errors_eta, "list of stops erroring:", list_stops_error)
+        # print("Errors in Line Detail: ", errors_ld)
+        # print("Errors in ETA:", errors_eta, "list of stops erroring:", list_stops_error)
 
         if errors_eta > 0:
             list_stops_error_retry = []
@@ -435,16 +511,16 @@ async def get_emt(config: Settings, minio_client: Minio = None):
                         list_stops_error_retry.append(stop_id)
 
                 except:
-                    #print("Error for stop ", stop_id, "Time arrival ")
+                    # print("Error for stop ", stop_id, "Time arrival ")
                     errors_eta_retry += 1
                     list_stops_error_retry.append(stop_id)
 
-        '''print(
+        """print(
             "Errors in ETA AFTER RETRYING:",
             errors_eta_retry,
             "list of stops erroring AFTER RETRYING:",
             list_stops_error_retry,
-        )'''
+        )"""
         end = datetime.datetime.now()
         print("Time duration", end - now)
         print("EXTRACTED EMT")
