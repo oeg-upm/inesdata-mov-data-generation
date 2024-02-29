@@ -7,12 +7,12 @@ from enum import Enum
 import pandas as pd
 import typer
 
-from inesdata_mov_datasets.sources.aemet.create.create import create_aemet
-from inesdata_mov_datasets.sources.aemet.extract.extract import get_aemet
-from inesdata_mov_datasets.sources.emt.create.create import create_emt
-from inesdata_mov_datasets.sources.emt.extract.extract import get_emt
-from inesdata_mov_datasets.sources.informo.create.create import create_informo
-from inesdata_mov_datasets.sources.informo.extract.extract import get_informo
+from inesdata_mov_datasets.sources.create.aemet import create_aemet
+from inesdata_mov_datasets.sources.create.emt import create_emt
+from inesdata_mov_datasets.sources.create.informo import create_informo
+from inesdata_mov_datasets.sources.extract.aemet import get_aemet
+from inesdata_mov_datasets.sources.extract.emt import get_emt
+from inesdata_mov_datasets.sources.extract.informo import get_informo
 from inesdata_mov_datasets.utils import minio_connection, read_settings
 
 app = typer.Typer(add_completion=False)
@@ -34,47 +34,35 @@ class Sources(str, Enum):
 
 @app.command()
 def extract(
-    config_path: str = typer.Option(default=..., help="Path to configuration yaml file"),
+    config_path: str = typer.Option(help="Path to configuration yaml file"),
     sources: Sources = typer.Option(
         default=Sources.all.value, help="Possible sources to extract."
     ),
 ):
     """Extract raw data from the sources configurated."""
     # read settings
-    config = read_settings(config_path)
+    settings = read_settings(config_path)
 
-    if config.storage.default == "minio":
-        minio_client = minio_connection(config)
-        # EMT
-        if sources.value == sources.emt or sources.value == sources.all:
-            asyncio.run(get_emt(config, minio_client))
-        # Aemet
-        if sources.value == sources.aemet or sources.value == sources.all:
-            get_aemet(config, minio_client)
-        # Informo
-        if sources.value == sources.informo or sources.value == sources.all:
-            get_informo(config, minio_client)
-
-    if config.storage.default == "local":
-        # EMT
-        if sources.value == sources.emt or sources.value == sources.all:
-            asyncio.run(get_emt(config))
-        # Aemet
-        if sources.value == sources.aemet or sources.value == sources.all:
-            get_aemet(config)
-        # Informo
-        if sources.value == sources.informo or sources.value == sources.all:
-            get_informo(config)
+    if settings.storage.default == "minio":
+        minio_client = minio_connection(settings)
+    elif settings.storage.default == "local":
+        minio_client = None
+    # EMT
+    if sources.value == sources.emt or sources.value == sources.all:
+        asyncio.run(get_emt(settings, minio_client))
+    # Aemet
+    if sources.value == sources.aemet or sources.value == sources.all:
+        get_aemet(settings, minio_client)
+    # Informo
+    if sources.value == sources.informo or sources.value == sources.all:
+        get_informo(settings, minio_client)
 
     print("Extracted data")
 
 
 @app.command()
 def create(
-    config_path: str = typer.Option(
-        default="/home/code/inesdata-mov/data-generation/config.yaml",
-        help="Path to configuration yaml file",
-    ),
+    config_path: str = typer.Option(help="Path to configuration yaml file"),
     start_date: datetime = typer.Option(
         default=datetime.today(),
         formats=["%Y%m%d"],
@@ -86,12 +74,12 @@ def create(
         help="End date in format YYYYMMDD",
     ),
     sources: Sources = typer.Option(
-        default=Sources.all.value, help="Possible sources to generate (emt, informo, aemet, all)."
+        default=Sources.all.value, help="Possible sources to generate."
     ),
 ):
     """Create mobility datasets in a given date range from raw data. Please, run first gather command to get the raw data.
 
-    Execution example: python inesdata_mov_datasets/__main__.py create --config-path=/home/code/inesdata-mov/data-generation/config_dev.yaml --start-date=20240219 --end-date=20240220 --sources=informo
+    Execution example: python inesdata_mov_datasets create --config-path=/home/code/inesdata-mov/data-generation/.config_dev.yaml --start-date=20240219 --end-date=20240220 --sources=informo
     """
     # read settings
     settings = read_settings(config_path)
@@ -102,21 +90,16 @@ def create(
     for date in dates:
         date_formatted = date.strftime("%Y/%m/%d")
         if sources.value == sources.emt or sources.value == sources.all:
-            print("Creating EMT")
             create_emt(settings=settings, date=date_formatted)
-            print("Created EMT")
             print("- - - - - - -")
         if sources.value == sources.aemet or sources.value == sources.all:
-            print("Creating AEMET")
             create_aemet(settings=settings, date=date_formatted)
-            print("Created AEMET")
             print("- - - - - - -")
         if sources.value == sources.informo or sources.value == sources.all:
-            print("Creating INFORMO")
             create_informo(settings=settings, date=date_formatted)
-            print("Created INFORMO")
             print("- - - - - - -")
     print("Created data")
+
 
 if __name__ == "__main__":
     app()
