@@ -1,7 +1,6 @@
 """Extract raw data from emt."""
 import asyncio
 import datetime
-import io
 import json
 import os
 from pathlib import Path
@@ -10,10 +9,14 @@ import aiohttp
 import pytz
 import requests
 from aiohttp.client_exceptions import ContentTypeError
-from minio import Minio
 
 from inesdata_mov_datasets.settings import Settings
-from inesdata_mov_datasets.utils import check_local_file_exists, check_minio_file_exists
+from inesdata_mov_datasets.utils import (
+    check_local_file_exists,
+    check_s3_file_exists,
+    read_obj,
+    upload_objs,
+)
 
 
 async def get_calendar(
@@ -40,7 +43,7 @@ async def get_calendar(
         try:
             return await response.json()
         except ContentTypeError:
-            # print("Error in calendar call")
+            #print("Error in calendar call")
             return -1
 
 
@@ -68,7 +71,7 @@ async def get_line_detail(
         try:
             return await response.json()
         except ContentTypeError:
-            # print("Error in line_detail call line", line_id)
+            #print("Error in line_detail call line", line_id)
             return -1
 
 
@@ -94,18 +97,15 @@ async def get_eta(session: aiohttp, stop_id: str, headers: json) -> json:
         try:
             return await response.json()
         except ContentTypeError:
-            # print("Error in ETA call stop", stop_id)
+            #print("Error in ETA call stop", stop_id)
             return -1
 
 
-def login_emt(
-    config: Settings, object_login_name: str, minio_client: Minio = None, local_path: Path = None
-) -> str:
+async def login_emt(config: Settings, object_login_name: str, local_path: Path = None) -> str:
     """Make the call to Login endpoint EMT.
 
     Args:
         config (Settings): Object with the config file.
-        minio_client (Minio, optional): Object with Minio connection. Defaults to None.
         object_login_name (str): Name of the object which is onna be saved.
         local_path (Path): Local path to save login response.
 
@@ -135,11 +135,15 @@ def login_emt(
     token = login_json["data"][0]["accessToken"]
 
     if config.storage.default == "minio":
-        minio_client.put_object(
+        #Dict to upload s3 asynchronously
+        login_dict_upload = {}
+        login_dict_upload[str(object_login_name)] = login_json_str
+        await upload_objs(
             config.storage.config.minio.bucket,
-            str(object_login_name),
-            io.BytesIO(login_json_str.encode("utf-8")),
-            len(login_json_str),
+            config.storage.config.minio.endpoint,
+            config.storage.config.minio.access_key,
+            config.storage.config.minio.secret_key,
+            login_dict_upload,
         )
 
     if config.storage.default == "local":
@@ -150,35 +154,43 @@ def login_emt(
     return token
 
 
-def token_control(
-    config: Settings, date_slash: str, date_day: str, minio_client: Minio = None
-) -> str:
+async def token_control(config: Settings, date_slash: str, date_day: str) -> str:
     """Get existing token from EMT API or regenerate it if its deprecated.
 
     Args:
         config (Settings): Object with the config file.
-        minio_client (Minio, optional): Object with Minio connection. Defaults to None.
         date_slash (str): date format for object name
         date_day (str): date format for object name
 
     Returns:
        str: Token from EMT Login.
     """
-    if minio_client:
+
+    if config.storage.default == "minio":
         object_login_name = Path("raw") / "emt" / date_slash / "login" / f"login_{date_day}.json"
-        if not check_minio_file_exists(
-            minio_client, config.storage.config.minio.bucket, str(object_login_name)
+        
+        #Check if file already exists so we have made the call already
+        if not await check_s3_file_exists(
+            endpoint_url=config.storage.config.minio.endpoint,
+            aws_secret_access_key=config.storage.config.minio.secret_key,
+            aws_access_key_id=config.storage.config.minio.access_key,
+            bucket_name=config.storage.config.minio.bucket,
+            object_name=str(object_login_name),
         ):
-            token = login_emt(config, object_login_name, minio_client=minio_client)
+            token = await login_emt(config, object_login_name)
             return token
 
+        #If it exists, get the token from the json
         else:
-            response = minio_client.get_object(
-                bucket_name=config.storage.config.minio.bucket,
-                object_name=str(object_login_name),
+            response = await read_obj(
+                config.storage.config.minio.bucket,
+                config.storage.config.minio.endpoint,
+                config.storage.config.minio.access_key,
+                config.storage.config.minio.secret_key,
+                str(object_login_name),
             )
 
-            data = json.load(response)
+            data = json.loads(response)
             token = data["data"][0]["accessToken"]
             expiration_date_unix = data["data"][0]["tokenDteExpiration"]["$date"]
 
@@ -186,21 +198,25 @@ def token_control(
                 expiration_date_unix / 1000
             )  #  miliseconds to seconds
             now = datetime.datetime.now()
-            # Compare
+            
+            #Compare the time expiration of the token withthe actual date
             if now >= expiration_date:  # reset token
-                token = login_emt(config, minio_client, object_login_name)
+                token = await login_emt(config, object_login_name)
                 return token
-
+            #Get the token that already exists
             elif now < expiration_date:
                 return token
 
-    else:
+    elif config.storage.default == "local":
         dir_path = Path(config.storage.config.local.path) / "raw" / "emt" / date_slash / "login"
         object_login_name = f"login_{date_day}.json"
+        
+        #Check if file already exists so we have made the call already
         if not check_local_file_exists(dir_path, object_login_name):
-            token = login_emt(config, object_login_name, local_path=dir_path)
+            token = await login_emt(config, object_login_name, local_path=dir_path)
             return token
 
+        #If it exists, get the token from the json
         else:
             with open(os.path.join(dir_path, object_login_name), "r") as file:
                 response = file.read()
@@ -212,23 +228,24 @@ def token_control(
                     expiration_date_unix / 1000
                 )  #  miliseconds to seconds
                 now = datetime.datetime.now()
-                # Compare
+                #Compare the time expiration of the token withthe actual date
                 if now >= expiration_date:  # reset token
-                    token = login_emt(config, object_login_name, local_path=dir_path)
+                    token = await login_emt(config, object_login_name, local_path=dir_path)
                     return token
-
+                #Get the token that already exists
                 elif now < expiration_date:
                     return token
 
 
-async def get_emt(config: Settings, minio_client: Minio = None):
+async def get_emt(config: Settings):
     """Get all the data from EMT endpoints.
 
     Args:
         config (Settings): Object with the config file..
-        minio_client (Minio, optional): Object with Minio connection. Defaults to None.
     """
     print("EXTRACTING EMT")
+    
+    #Get the timezone from Madrid and formated the dates for the object_name of the files
     europe_timezone = pytz.timezone("Europe/Madrid")
     current_datetime = datetime.datetime.now(europe_timezone).replace(second=0)
     formatted_date = current_datetime.strftime(
@@ -243,8 +260,8 @@ async def get_emt(config: Settings, minio_client: Minio = None):
 
     now = datetime.datetime.now()
 
-    access_token = token_control(
-        config, formatted_date_slash, formatted_date_day, minio_client=minio_client
+    access_token = await token_control(
+        config, formatted_date_slash, formatted_date_day
     )  # Obtain token from EMT
 
     # Headers for requests to the EMT API
@@ -254,7 +271,6 @@ async def get_emt(config: Settings, minio_client: Minio = None):
         "Accept": "application/json",
     }
 
-    bucket_name = config.storage.config.minio.bucket
 
     async with aiohttp.ClientSession() as session:
         # List to store tasks asynchronously
@@ -274,14 +290,21 @@ async def get_emt(config: Settings, minio_client: Minio = None):
                     / "line_detail"
                     / f"line_detail_{line_id}_{formatted_date_day}.json"
                 )
-                if not check_minio_file_exists(
-                    minio_client, bucket_name, str(object_line_detail_name)
+                #If the files are not saved, append the task of the line_detail request
+                if not await check_s3_file_exists(
+                    endpoint_url=config.storage.config.minio.endpoint,
+                    aws_secret_access_key=config.storage.config.minio.secret_key,
+                    aws_access_key_id=config.storage.config.minio.access_key,
+                    bucket_name=config.storage.config.minio.bucket,
+                    object_name=str(object_line_detail_name),
                 ):
                     line_detail_task = asyncio.ensure_future(
                         get_line_detail(session, formatted_date_day, line_id, headers)
                     )
                     line_detail_tasks.append(line_detail_task)
                     lines_not_called.append(line_id)
+                    
+                #line already called
                 else:
                     lines_called += 1
 
@@ -294,17 +317,21 @@ async def get_emt(config: Settings, minio_client: Minio = None):
                     / formatted_date_slash
                     / "line_detail"
                 )
+                #If the files are not saved, append the task of the line_detail request
                 if not check_local_file_exists(path_dir_line_detail, object_line_detail_name):
                     line_detail_task = asyncio.ensure_future(
                         get_line_detail(session, formatted_date_day, line_id, headers)
                     )
                     line_detail_tasks.append(line_detail_task)
                     lines_not_called.append(line_id)
+                    
+                #line already called
                 else:
                     lines_called += 1
 
-        # print("Already called " + str(lines_called) + "lines")
+        #print("Already called " + str(lines_called) + "lines")
 
+        #Calendar endpoint task
         if config.storage.default == "minio":
             object_calendar_name = (
                 Path("raw")
@@ -313,15 +340,21 @@ async def get_emt(config: Settings, minio_client: Minio = None):
                 / "calendar"
                 / f"calendar_{formatted_date_day}.json"
             )
-            # Make request to the calendar endpoint
-            if not check_minio_file_exists(minio_client, bucket_name, str(object_calendar_name)):
+            #If the file are not saved, append the task of the calendar request
+            if not await check_s3_file_exists(
+                endpoint_url=config.storage.config.minio.endpoint,
+                aws_secret_access_key=config.storage.config.minio.secret_key,
+                aws_access_key_id=config.storage.config.minio.access_key,
+                bucket_name=config.storage.config.minio.bucket,
+                object_name=str(object_calendar_name),
+            ):
                 calendar_task = asyncio.ensure_future(
                     get_calendar(session, formatted_date_day, formatted_date_day, headers)
                 )
                 calendar_tasks.append(calendar_task)
             else:
                 pass
-                # print("Already called Calendar")
+                #print("Already called Calendar")
 
         if config.storage.default == "local":
             object_calendar_name = f"calendar_{formatted_date_day}.json"
@@ -332,7 +365,7 @@ async def get_emt(config: Settings, minio_client: Minio = None):
                 / formatted_date_slash
                 / "calendar"
             )
-
+            #If the file are not saved, append the task of the calendar request
             if not check_local_file_exists(path_dir_calendar, object_calendar_name):
                 calendar_task = asyncio.ensure_future(
                     get_calendar(session, formatted_date_day, formatted_date_day, headers)
@@ -340,7 +373,7 @@ async def get_emt(config: Settings, minio_client: Minio = None):
                 calendar_tasks.append(calendar_task)
             else:
                 pass
-                # print("Already called Calendar")
+                #print("Already called Calendar")
 
         # Make requests to the eta for each stop
         for stop_id in config.sources.emt.stops:
@@ -356,6 +389,7 @@ async def get_emt(config: Settings, minio_client: Minio = None):
         errors_eta = 0
 
         if line_detail_responses:
+            line_detail_dict_upload = {}
             for line_id, response in zip(lines_not_called, line_detail_responses):
                 try:
                     response_json_str = json.dumps(response)
@@ -368,12 +402,9 @@ async def get_emt(config: Settings, minio_client: Minio = None):
                                 / "line_detail"
                                 / f"line_detail_{line_id}_{formatted_date_day}.json"
                             )
-                            minio_client.put_object(
-                                bucket_name,
-                                str(object_line_detail_name),
-                                io.BytesIO(response_json_str.encode("utf-8")),
-                                len(response_json_str),
-                            )
+                            # Add to the dict the good responses
+                            line_detail_dict_upload[object_line_detail_name] = response_json_str
+
                         if config.storage.default == "local":
                             object_line_detail_name = (
                                 f"line_detail_{line_id}_{formatted_date_day}.json"
@@ -387,19 +418,34 @@ async def get_emt(config: Settings, minio_client: Minio = None):
                         errors_ld += 1
                 except Exception:
                     pass
-                    # print("Error for line ", line_id, "Line detail ")
+                    #print("Error for line ", line_id, "Line detail ")
 
-        # Store the calendar response in MinIO if present
+            # Upload the dict to s3 asynchronously if dict contains something (This means minio flag in convig was enabled)
+            if line_detail_dict_upload:
+                await upload_objs(
+                    config.storage.config.minio.bucket,
+                    config.storage.config.minio.endpoint,
+                    config.storage.config.minio.access_key,
+                    config.storage.config.minio.secret_key,
+                    line_detail_dict_upload,
+                )
+
+        # Store the calendar response if present
         if calendar_response:
+            calendar_dict_upload = {}
             try:
                 calendar_json_str = json.dumps(calendar_response)
                 if calendar_response[0]["code"] == "00":
                     if config.storage.default == "minio":
-                        minio_client.put_object(
-                            bucket_name,
-                            str(object_calendar_name),
-                            io.BytesIO(calendar_json_str.encode("utf-8")),
-                            len(calendar_json_str),
+                        calendar_dict_upload[str(object_calendar_name)] = calendar_json_str
+
+                        # Upload to s3 asynchronously
+                        await upload_objs(
+                            config.storage.config.minio.bucket,
+                            config.storage.config.minio.endpoint,
+                            config.storage.config.minio.access_key,
+                            config.storage.config.minio.secret_key,
+                            calendar_dict_upload,
                         )
                     if config.storage.default == "local":
                         os.makedirs(path_dir_calendar, exist_ok=True)
@@ -409,13 +455,14 @@ async def get_emt(config: Settings, minio_client: Minio = None):
                             file.write(calendar_json_str)
                 else:
                     pass
-                    # print("Error in calendar")
+                    #print("Error in calendar")
             except:
                 pass
-                # print("Error for calendar endpoint")
+                #print("Error for calendar endpoint")
 
         # Store the bus stop responses in MinIO
         list_stops_error = []
+        eta_dict_upload = {}
         for stop_id, response in zip(config.sources.emt.stops, eta_responses):
             try:
                 response_json_str = json.dumps(response)
@@ -428,12 +475,8 @@ async def get_emt(config: Settings, minio_client: Minio = None):
                             / "eta"
                             / f"eta_{stop_id}_{formatted_date}.json"
                         )
-                        minio_client.put_object(
-                            bucket_name,
-                            str(object_eta_name),
-                            io.BytesIO(response_json_str.encode("utf-8")),
-                            len(response_json_str),
-                        )
+                        eta_dict_upload[object_eta_name] = response_json_str
+
                     if config.storage.default == "local":
                         object_eta_name = f"eta_{stop_id}_{formatted_date}.json"
                         path_dir_eta = (
@@ -454,12 +497,24 @@ async def get_emt(config: Settings, minio_client: Minio = None):
             except:
                 errors_eta += 1
                 list_stops_error.append(stop_id)
-                # print("Error for stop ", stop_id, "Time arrival")
+                #print("Error for stop ", stop_id, "Time arrival")
 
-        # print("Errors in Line Detail: ", errors_ld)
-        # print("Errors in ETA:", errors_eta, "list of stops erroring:", list_stops_error)
+        # Upload the dict to s3 asynchronously if dict contains something (This means minio flag in convig was enabled)
+        if eta_dict_upload:
+            await upload_objs(
+                config.storage.config.minio.bucket,
+                config.storage.config.minio.endpoint,
+                config.storage.config.minio.access_key,
+                config.storage.config.minio.secret_key,
+                eta_dict_upload,
+            )
 
+        #print("Errors in Line Detail: ", errors_ld)
+        #print("Errors in ETA:", errors_eta, "list of stops erroring:", list_stops_error)
+
+        # Retry the failed petitions
         if errors_eta > 0:
+            eta_dict_upload = {}
             list_stops_error_retry = []
             eta_tasks2 = []
             errors_eta_retry = 0
@@ -486,13 +541,8 @@ async def get_emt(config: Settings, minio_client: Minio = None):
                                 / "eta"
                                 / f"eta_{stop_id}_{formatted_date}.json"
                             )
+                            eta_dict_upload[object_eta_name] = response_json_str
 
-                            minio_client.put_object(
-                                bucket_name,
-                                str(object_eta_name),
-                                io.BytesIO(response_json_str.encode("utf-8")),
-                                len(response_json_str),
-                            )
                         if config.storage.default == "local":
                             object_eta_name = f"eta_{stop_id}_{formatted_date}.json"
                             path_dir_eta = (
@@ -511,16 +561,27 @@ async def get_emt(config: Settings, minio_client: Minio = None):
                         list_stops_error_retry.append(stop_id)
 
                 except:
-                    # print("Error for stop ", stop_id, "Time arrival ")
+                    print("Error for stop ", stop_id, "Time arrival ")
                     errors_eta_retry += 1
                     list_stops_error_retry.append(stop_id)
-
-        """print(
+        '''
+        print(
             "Errors in ETA AFTER RETRYING:",
             errors_eta_retry,
             "list of stops erroring AFTER RETRYING:",
             list_stops_error_retry,
-        )"""
+        )'''
+
+        # Upload the dict to s3 asynchronously if dict contains something (This means minio flag in convig was enabled)
+        if eta_dict_upload:
+            await upload_objs(
+                config.storage.config.minio.bucket,
+                config.storage.config.minio.endpoint,
+                config.storage.config.minio.access_key,
+                config.storage.config.minio.secret_key,
+                eta_dict_upload,
+            )
+
         end = datetime.datetime.now()
         print("Time duration", end - now)
         print("EXTRACTED EMT")

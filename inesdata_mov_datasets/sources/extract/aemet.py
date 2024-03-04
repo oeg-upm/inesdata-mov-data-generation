@@ -1,18 +1,16 @@
 """Gather raw data from aemet."""
 
 import datetime
-import io
 import json
 from pathlib import Path
 
 import requests
-from minio import Minio
 
 from inesdata_mov_datasets.settings import Settings
-from inesdata_mov_datasets.utils import check_local_file_exists, check_minio_file_exists
+from inesdata_mov_datasets.utils import check_local_file_exists, check_s3_file_exists, upload_objs
 
 
-def get_aemet(config: Settings, minio_client: Minio = None):
+async def get_aemet(config: Settings):
     """Request aemet API to get data from Madrid weather.
 
     Args:
@@ -34,7 +32,7 @@ def get_aemet(config: Settings, minio_client: Minio = None):
     r = requests.get(url_madrid, headers=headers)
     r_json = requests.get(r.json()["datos"]).json()
 
-    save_aemet(config, r_json, minio_client)
+    await save_aemet(config, r_json)
 
     end = datetime.datetime.now()
     print("Time duration", end - now)
@@ -42,7 +40,7 @@ def get_aemet(config: Settings, minio_client: Minio = None):
     print("- - - - - - -")
 
 
-def save_aemet(config: Settings, data: json, minio_client: Minio = None):
+async def save_aemet(config: Settings, data: json):
     """Save weather json.
 
     Args:
@@ -63,21 +61,25 @@ def save_aemet(config: Settings, data: json, minio_client: Minio = None):
             Path("raw") / "aemet" / formatted_date_slash / f"aemet_{formatted_date_day}.json"
         )
 
-        if not check_minio_file_exists(
-            minio_client, config.storage.config.minio.bucket, str(object_name)
+        if not await check_s3_file_exists(
+            endpoint_url=config.storage.config.minio.endpoint,
+            aws_secret_access_key=config.storage.config.minio.secret_key,
+            aws_access_key_id=config.storage.config.minio.access_key,
+            bucket_name=config.storage.config.minio.bucket,
+            object_name=str(object_name),
         ):
             # Convert data to JSON string
             response_json_str = json.dumps(data)
 
-            # Create BytesIO object from JSON string
-            response_bytes = io.BytesIO(response_json_str.encode("utf-8"))
-
-            # Put object in Minio bucket
-            minio_client.put_object(
+            # Create dict and upload into s3
+            aemet_dict_upload = {}
+            aemet_dict_upload[str(object_name)] = response_json_str
+            await upload_objs(
                 config.storage.config.minio.bucket,
-                str(object_name),
-                response_bytes,
-                len(response_json_str),
+                config.storage.config.minio.endpoint,
+                config.storage.config.minio.access_key,
+                config.storage.config.minio.secret_key,
+                aemet_dict_upload,
             )
 
     if config.storage.default == "local":

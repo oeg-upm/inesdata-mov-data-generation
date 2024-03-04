@@ -13,7 +13,7 @@ from inesdata_mov_datasets.sources.create.informo import create_informo
 from inesdata_mov_datasets.sources.extract.aemet import get_aemet
 from inesdata_mov_datasets.sources.extract.emt import get_emt
 from inesdata_mov_datasets.sources.extract.informo import get_informo
-from inesdata_mov_datasets.utils import minio_connection, read_settings
+from inesdata_mov_datasets.utils import read_settings
 
 app = typer.Typer(add_completion=False)
 
@@ -43,19 +43,15 @@ def extract(
     # read settings
     settings = read_settings(config_path)
 
-    if settings.storage.default == "minio":
-        minio_client = minio_connection(settings)
-    elif settings.storage.default == "local":
-        minio_client = None
     # EMT
     if sources.value == sources.emt or sources.value == sources.all:
-        asyncio.run(get_emt(settings, minio_client))
+        asyncio.run(get_emt(settings))
     # Aemet
     if sources.value == sources.aemet or sources.value == sources.all:
-        get_aemet(settings, minio_client)
+        asyncio.run(get_aemet(settings))
     # Informo
     if sources.value == sources.informo or sources.value == sources.all:
-        get_informo(settings, minio_client)
+        asyncio.run(get_informo(settings))
 
     print("Extracted data")
 
@@ -77,7 +73,7 @@ def create(
         default=Sources.all.value, help="Possible sources to generate."
     ),
 ):
-    """Create mobility datasets in a given date range from raw data. Please, run first gather command to get the raw data.
+    """Create mobility datasets in a given date range from raw data. Please, run first extract command to get the raw data.
 
     Execution example: python inesdata_mov_datasets create --config-path=/home/code/inesdata-mov/data-generation/.config_dev.yaml --start-date=20240219 --end-date=20240220 --sources=informo
     """
