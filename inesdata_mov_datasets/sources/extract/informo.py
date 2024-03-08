@@ -1,11 +1,14 @@
 """Gather raw data from aemet."""
 import datetime
 import json
+import traceback
 from pathlib import Path
 
 import requests
 import xmltodict
+from loguru import logger
 
+from inesdata_mov_datasets.handlers.logger import import_extract_logger
 from inesdata_mov_datasets.settings import Settings
 from inesdata_mov_datasets.utils import check_local_file_exists, check_s3_file_exists, upload_objs
 
@@ -16,24 +19,25 @@ async def get_informo(config: Settings):
     Args:
         config (Settings): Object with the config file.
     """
-    print("EXTRACTING INFORMO")
-    now = datetime.datetime.now()
-    url_informo = "https://informo.madrid.es/informo/tmadrid/pm.xml"
+    try:
+        # Logger
+        import_extract_logger(config, "INFORMO")
+        logger.info("Extracting INFORMO")
+        now = datetime.datetime.now()
+        url_informo = "https://informo.madrid.es/informo/tmadrid/pm.xml"
 
-    r = requests.get(url_informo)
-    if r.status_code == 200:
+        r = requests.get(url_informo)
         # Parse XML
         xml_dict = xmltodict.parse(r.content)
-    else:
-        print("Error:", r.status_code)
 
-    await save_informo(config, xml_dict)
+        await save_informo(config, xml_dict)
 
-    end = datetime.datetime.now()
-    print("Time duration", end - now)
-
-    print("EXTRACTED INFORMO")
-    print("- - - - - - -")
+        end = datetime.datetime.now()
+        logger.debug(f"Time duration of INFORMO extraction {end - now}")
+        logger.info("Extracted INFORMO")
+    except Exception as e:
+        logger.error(e)
+        logger.error(traceback.format_exc())
 
 
 async def save_informo(config: Settings, data: json):
@@ -43,7 +47,6 @@ async def save_informo(config: Settings, data: json):
         config (Settings): Object with the config file.
         data (json): Data with informo in json format.
     """
-
     # Get the last update date from the response
     date_from_file = data["pms"]["fecha_hora"]
     dt = datetime.datetime.strptime(date_from_file, "%d/%m/%Y %H:%M:%S")
@@ -82,6 +85,8 @@ async def save_informo(config: Settings, data: json):
                 config.storage.config.minio.secret_key,
                 informo_dict_upload,
             )
+        else:
+            logger.debug("Already called AEMET today")
 
     if config.storage.default == "local":
         object_name = f"informo_{formated_date}.json"
@@ -99,3 +104,5 @@ async def save_informo(config: Settings, data: json):
             # Write JSON data to file
             with open(path_save_informo / object_name, "w") as file:
                 file.write(response_json_str)
+        else:
+            logger.debug("Already called AEMET today")

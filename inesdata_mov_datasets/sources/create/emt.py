@@ -1,5 +1,4 @@
 import json
-import logging
 import os
 import tempfile
 import traceback
@@ -7,14 +6,11 @@ from datetime import datetime
 from pathlib import Path
 
 import pandas as pd
+from loguru import logger
 
+from inesdata_mov_datasets.handlers.logger import import_create_logger
 from inesdata_mov_datasets.settings import Settings
 from inesdata_mov_datasets.utils import async_download
-
-# Logger
-logging.basicConfig(
-    filename="app.log", level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s"
-)
 
 
 def generate_calendar_df_from_file(content: dict) -> pd.DataFrame:
@@ -37,8 +33,8 @@ def generate_calendar_df_from_file(content: dict) -> pd.DataFrame:
                 # Get selected cols
                 # day_df = day_df[['date', 'dayType']]
     except Exception as e:
-        logging.error(e)
-        logging.error(traceback.format_exc())
+        logger.error(e)
+        logger.error(traceback.format_exc())
     return day_df
 
 
@@ -56,9 +52,8 @@ def generate_calendar_day_df(storage_path: str, date: str) -> pd.DataFrame:
     raw_storage_dir = Path(storage_path) / Path("raw") / "emt" / date / "calendar"
     raw_storage_dir.mkdir(parents=True, exist_ok=True)
     files = os.listdir(raw_storage_dir)
-    logging.info(f"files count: {len(files)}")
+    logger.info(f"#{len(files)} files from EMT calendar endpoint")
     for file in files:
-        logging.info(f"generating df from {file}")
         filename = raw_storage_dir / file
         with open(filename, "r") as f:
             content = json.load(f)
@@ -73,7 +68,7 @@ def generate_calendar_day_df(storage_path: str, date: str) -> pd.DataFrame:
         # processed_storage_dir = Path(storage_path) / Path("processed") / "emt" / date
         # Path(processed_storage_dir).mkdir(parents=True, exist_ok=True)
         # final_df.to_csv(processed_storage_dir / "calendar_processed.csv", index=None)
-        print(f"Created EMT calendar df of shape {final_df.shape}")
+        logger.info(f"Created EMT calendar df of shape {final_df.shape}")
         return final_df
     else:
         return pd.DataFrame([])
@@ -90,10 +85,9 @@ def create_calendar_emt(settings: Settings, date: str) -> pd.DataFrame:
         pd.DataFrame: df from EMT calendar endpoint
     """
     # Download day's raw data from minio
-    logging.info(f"Generating EMT calendar dataset for date: {date}")
+    logger.info(f"Creating EMT calendar dataset for date: {date}")
 
     with tempfile.TemporaryDirectory() as tmpdirname:
-        logging.debug(tmpdirname)
         start = datetime.now()
         storage_config = settings.storage.config
         storage_path = storage_config.local.path  # tmpdirname
@@ -109,7 +103,7 @@ def create_calendar_emt(settings: Settings, date: str) -> pd.DataFrame:
         df = generate_calendar_day_df(storage_path=storage_path, date=date)
 
         end = datetime.now()
-        logging.info(end - start)
+        logger.debug(f"Time duration of EMT calendar dataset creation {end - start}")
         return df
 
 
@@ -150,8 +144,8 @@ def generate_line_df_from_file(content: dict) -> pd.DataFrame:
                     ]
                 ].drop_duplicates()
     except Exception as e:
-        logging.error(e)
-        logging.error(traceback.format_exc())
+        logger.error(e)
+        logger.error(traceback.format_exc())
     return day_df
 
 
@@ -169,9 +163,8 @@ def generate_line_day_df(storage_path: str, date: str) -> pd.DataFrame:
     raw_storage_dir = Path(storage_path) / Path("raw") / "emt" / date / "line_detail"
     raw_storage_dir.mkdir(parents=True, exist_ok=True)
     files = os.listdir(raw_storage_dir)
-    logging.info(f"files count: {len(files)}")
+    logger.info(f"#{len(files)} files from EMT line_detail endpoint")
     for file in files:
-        logging.info(f"generating df from {file}")
         filename = raw_storage_dir / file
         with open(filename, "r") as f:
             content = json.load(f)
@@ -186,7 +179,7 @@ def generate_line_day_df(storage_path: str, date: str) -> pd.DataFrame:
         # processed_storage_dir = Path(storage_path) / Path("processed") / "emt" / date
         # Path(processed_storage_dir).mkdir(parents=True, exist_ok=True)
         # final_df.to_csv(processed_storage_dir / "line_detail_processed.csv", index=None)
-        print(f"Created EMT line df of shape {final_df.shape}")
+        logger.info(f"Created EMT line df of shape {final_df.shape}")
         return final_df
     else:
         return pd.DataFrame([])
@@ -203,10 +196,9 @@ def create_line_detail_emt(settings: Settings, date: str) -> pd.DataFrame:
         pd.DataFrame: df from EMT line_detail endpoint
     """
     # Download day's raw data from minio
-    logging.info(f"Generating EMT line_detail dataset for date: {date}")
+    logger.info(f"Creating EMT line_detail dataset for date: {date}")
 
     with tempfile.TemporaryDirectory() as tmpdirname:
-        logging.debug(tmpdirname)
         start = datetime.now()
         storage_config = settings.storage.config
         storage_path = storage_config.local.path  # tmpdirname
@@ -222,7 +214,7 @@ def create_line_detail_emt(settings: Settings, date: str) -> pd.DataFrame:
         df = generate_line_day_df(storage_path=storage_path, date=date)
 
         end = datetime.now()
-        logging.info(end - start)
+        logger.debug(f"Time duration of EMT line dataset creation {end - start}")
         return df
 
 
@@ -251,8 +243,8 @@ def generate_eta_df_from_file(content: dict) -> pd.DataFrame:
                 day_df["positionBusLat"] = day_df["positionBus"].apply(pd.Series)[1]
                 day_df = day_df.drop(columns=["geometry", "positionBus"])
     except Exception as e:
-        logging.error(e)
-        logging.error(traceback.format_exc())
+        logger.error(e)
+        logger.error(traceback.format_exc())
     return day_df
 
 
@@ -270,9 +262,8 @@ def generate_eta_day_df(storage_path: str, date: str) -> pd.DataFrame:
     raw_storage_dir = Path(storage_path) / Path("raw") / "emt" / date / "eta"
     raw_storage_dir.mkdir(parents=True, exist_ok=True)
     files = os.listdir(raw_storage_dir)
-    logging.info(f"files count: {len(files)}")
+    logger.info(f"#{len(files)} files from EMT ETA endpoint")
     for file in files:
-        logging.info(f"generating df from {file}")
         filename = raw_storage_dir / file
         with open(filename, "r") as f:
             content = json.load(f)
@@ -287,7 +278,7 @@ def generate_eta_day_df(storage_path: str, date: str) -> pd.DataFrame:
         # processed_storage_dir = Path(storage_path) / Path("processed") / "emt" / date
         # Path(processed_storage_dir).mkdir(parents=True, exist_ok=True)
         # final_df.to_csv(processed_storage_dir / "eta_processed.csv", index=None)
-        print(f"Created EMT ETA df of shape {final_df.shape}")
+        logger.info(f"Created EMT ETA df of shape {final_df.shape}")
         return final_df
     else:
         return pd.DataFrame([])
@@ -304,10 +295,9 @@ def create_eta_emt(settings: Settings, date: str) -> pd.DataFrame:
         pd.DataFrame: df from EMT ETA endpoint
     """
     # Download day's raw data from minio
-    logging.info(f"Generating EMT ETA dataset for date: {date}")
+    logger.info(f"Creating EMT ETA dataset for date: {date}")
 
     with tempfile.TemporaryDirectory() as tmpdirname:
-        logging.debug(tmpdirname)
         start = datetime.now()
         storage_config = settings.storage.config
         storage_path = storage_config.local.path  # tmpdirname
@@ -323,7 +313,7 @@ def create_eta_emt(settings: Settings, date: str) -> pd.DataFrame:
         df = generate_eta_day_df(storage_path=storage_path, date=date)
 
         end = datetime.now()
-        logging.info(end - start)
+        logger.debug(f"Time duration of EMT ETA dataset creation {end - start}")
         return df
 
 
@@ -343,8 +333,8 @@ def join_calendar_line_datasets(calendar_df: pd.DataFrame, line_df: pd.DataFrame
         calendar_line_df.rename(columns={"datetime_x": "datetime"}, inplace=True)
         return calendar_line_df
     except Exception as e:
-        logging.error(e)
-        logging.error(traceback.format_exc())
+        logger.error(e)
+        logger.error(traceback.format_exc())
         return pd.DataFrame([])
 
 
@@ -368,8 +358,8 @@ def join_eta_dataset(calendar_line_df: pd.DataFrame, eta_df: pd.DataFrame) -> pd
         df.rename(columns={"datetime_x": "datetime", "date_x": "date"}, inplace=True)
         return df
     except Exception as e:
-        logging.error(e)
-        logging.error(traceback.format_exc())
+        logger.error(e)
+        logger.error(traceback.format_exc())
         return pd.DataFrame([])
 
 
@@ -380,12 +370,12 @@ def create_emt(settings: Settings, date: str):
         settings (Settings): project settings
         date (str): a date formatted in YYYY/MM/DD
     """
+    # Logger
+    import_create_logger(settings, "EMT")
     start = datetime.now()
     storage_path = settings.storage.config.local.path
-    print("Creating EMT")
-    logging.info(f"Generating EMT dataset for date: {date}")
+    logger.info(f"Creating EMT dataset for date: {date}")
     try:
-        start = datetime.now()
         calendar_df = create_calendar_emt(settings, date)
         line_detail_df = create_line_detail_emt(settings, date)
         eta_df = create_eta_emt(settings, date)
@@ -401,15 +391,12 @@ def create_emt(settings: Settings, date: str):
             date_formatted = date.replace("/", "")
             processed_storage_path = storage_path + f"/processed/emt/{date}"
             df.to_csv(processed_storage_path + f"/emt_{date_formatted}.csv", index=None)
-            print(f"Created EMT df of shape {df.shape}")
+            logger.info(f"Created EMT df of shape {df.shape}")
         else:
-            print("There is no data to create")
-        end = datetime.now()
-        logging.info(end - start)
+            logger.debug("There is no data to create")
     except Exception as e:
-        logging.error(e)
-        logging.error(traceback.format_exc())
+        logger.error(e)
+        logger.error(traceback.format_exc())
 
     end = datetime.now()
-    print("Time duration", end - start)
-    logging.info(end - start)
+    logger.debug(f"Time duration of EMT dataset creation {end - start}")

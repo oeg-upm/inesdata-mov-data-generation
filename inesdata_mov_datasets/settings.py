@@ -69,6 +69,11 @@ class StorageLocalSettings(BaseModel):
     path: str
 
 
+class StorageLogSettings(BaseModel):
+    path: str
+    level: str
+
+
 class StorageConfigSettings(BaseModel):
     minio: Optional[StorageMinioSettings]
     local: Optional[StorageLocalSettings]
@@ -77,6 +82,7 @@ class StorageConfigSettings(BaseModel):
 class StorageSettings(BaseModel):
     default: Optional[str] = "local"
     config: StorageConfigSettings
+    logs: StorageLogSettings
 
     @model_validator(mode="after")
     def check_storage_config(self) -> "StorageSettings":

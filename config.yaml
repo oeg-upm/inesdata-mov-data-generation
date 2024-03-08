@@ -23,6 +23,9 @@ storage:
       bucket: my_bucket
     local:
       path: /path/to/save/datasets
+  logs:
+    path: /path/to/save/logs
+    level: LOG_LEVEL
 
 
 
