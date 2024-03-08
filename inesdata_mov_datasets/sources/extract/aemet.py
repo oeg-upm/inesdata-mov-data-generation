@@ -2,10 +2,13 @@
 
 import datetime
 import json
+import traceback
 from pathlib import Path
 
 import requests
+from loguru import logger
 
+from inesdata_mov_datasets.handlers.logger import import_extract_logger
 from inesdata_mov_datasets.settings import Settings
 from inesdata_mov_datasets.utils import check_local_file_exists, check_s3_file_exists, upload_objs
 
@@ -16,28 +19,33 @@ async def get_aemet(config: Settings):
     Args:
         config (Settings): Object with the config file.
     """
-    print("EXTRACTING AEMET")
-    now = datetime.datetime.now()
+    try:
+        # Logger
+        import_extract_logger(config, "AEMET")
+        logger.info("Extracting AEMET")
+        now = datetime.datetime.now()
 
-    url_madrid = (
-        "https://opendata.aemet.es/opendata/api/prediccion/especifica/municipio/horaria/28079"
-    )
+        url_madrid = (
+            "https://opendata.aemet.es/opendata/api/prediccion/especifica/municipio/horaria/28079"
+        )
 
-    headers = {
-        "api_key": config.sources.aemet.credentials.api_key,
-        "Content-Type": "application/json",
-        "Accept": "application/json",
-    }
+        headers = {
+            "api_key": config.sources.aemet.credentials.api_key,
+            "Content-Type": "application/json",
+            "Accept": "application/json",
+        }
 
-    r = requests.get(url_madrid, headers=headers)
-    r_json = requests.get(r.json()["datos"]).json()
+        r = requests.get(url_madrid, headers=headers)
+        r_json = requests.get(r.json()["datos"]).json()
 
-    await save_aemet(config, r_json)
+        await save_aemet(config, r_json)
 
-    end = datetime.datetime.now()
-    print("Time duration", end - now)
-    print("EXTRACTED AEMET")
-    print("- - - - - - -")
+        end = datetime.datetime.now()
+        logger.debug(f"Time duration of AEMET extraction {end - now}")
+        logger.info("Extracted AEMET")
+    except Exception as e:
+        logger.error(e)
+        logger.error(traceback.format_exc())
 
 
 async def save_aemet(config: Settings, data: json):
@@ -81,6 +89,8 @@ async def save_aemet(config: Settings, data: json):
                 config.storage.config.minio.secret_key,
                 aemet_dict_upload,
             )
+        else:
+            logger.debug("Already called AEMET today")
 
     if config.storage.default == "local":
         # Define object name and path for local storage
@@ -99,3 +109,5 @@ async def save_aemet(config: Settings, data: json):
             # Write JSON data to file
             with open(local_path / object_name, "w") as file:
                 file.write(response_json_str)
+        else:
+            logger.debug("Already called AEMET today")
