@@ -3,7 +3,7 @@ site_url: http://localhost
 site_description: Data Generation
 site_author: GMV
 
-repo_url: https://dev-git.labs.gmv.com/gmv-bda/upm/inesdata-mov/data-generation
+repo_url: https://github.com/oeg-upm/inesdata-mov-data-generation
 
 theme:
   name: material
@@ -11,10 +11,22 @@ theme:
   highlightjs: true
   hljs_languages:
     - python
+  features:
+  - navigation.instant
+  - content.code.copy
 
 markdown_extensions:
+  - attr_list
+  - md_in_html
+  - admonition
+  - pymdownx.details
+  - pymdownx.superfences
   - pymdownx.snippets:
       check_paths: true
+  - pymdownx.emoji:
+      emoji_index: !!python/name:material.extensions.emoji.twemoji
+      emoji_generator: !!python/name:material.extensions.emoji.to_svg
+
 
 nav:
   - Home: index.md
