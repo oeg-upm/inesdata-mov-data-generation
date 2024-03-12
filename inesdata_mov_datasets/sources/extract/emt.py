@@ -201,8 +201,15 @@ async def token_control(config: Settings, date_slash: str, date_day: str) -> str
 
             data = json.loads(response)
             token = data["data"][0]["accessToken"]
-            expiration_date_unix = data["data"][0]["tokenDteExpiration"]["$date"]
-
+            
+            #Catching an error that ocurrs when the server doesnt provide the token expiration
+            try:
+                expiration_date_unix = data["data"][0]["tokenDteExpiration"]["$date"]
+            except:
+                logger.error(f"Error saving time expiration from login. Solving the problem retrying the call.")
+                token = await login_emt(config, object_login_name)
+                return token
+            
             expiration_date = datetime.datetime.utcfromtimestamp(
                 expiration_date_unix / 1000
             )  #  miliseconds to seconds
@@ -231,8 +238,15 @@ async def token_control(config: Settings, date_slash: str, date_day: str) -> str
                 response = file.read()
                 data = json.loads(response)
                 token = data["data"][0]["accessToken"]
-                expiration_date_unix = data["data"][0]["tokenDteExpiration"]["$date"]
-
+                
+                #Catching an error that ocurrs when the server doesnt provide the token expiration
+                try:
+                    expiration_date_unix = data["data"][0]["tokenDteExpiration"]["$date"]
+                except:
+                    logger.error(f"Error saving time expiration from login. Solving the problem retrying the call.")
+                    token = await login_emt(config, object_login_name, local_path=dir_path)
+                    return token
+                
                 expiration_date = datetime.datetime.utcfromtimestamp(
                     expiration_date_unix / 1000
                 )  #  miliseconds to seconds
@@ -580,10 +594,10 @@ async def get_emt(config: Settings):
                         list_stops_error_retry.append(stop_id)
                         logger.error(e)
                         logger.error(traceback.format_exc())
-            logger.error(
-                f"{errors_eta_retry} errors in ETA after retrying, "
-                + f"list of stops erroring after retrying:, {list_stops_error_retry}"
-            )
+                logger.error(
+                    f"{errors_eta_retry} errors in ETA after retrying, "
+                    + f"list of stops erroring after retrying:, {list_stops_error_retry}"
+                )
 
             # Upload the dict to s3 asynchronously if dict contains something (This means minio flag in convig was enabled)
             if eta_dict_upload:

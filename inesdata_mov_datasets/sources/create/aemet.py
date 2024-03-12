@@ -66,7 +66,7 @@ def generate_df_from_file(content: dict, date: str) -> pd.DataFrame:
                 # day_df_final["date"] = pd.to_datetime(day_df_final["datetime"].dt.date)
                 for col in day_df.columns:
                     if col not in cols_to_ignore:
-                        day_df_aux = pd.DataFrame(day_df[col][0]).rename(
+                        day_df_aux = pd.DataFrame(day_df[col].values[0]).rename(
                             columns={"value": f"{col}_value", "descripcion": f"{col}_descripcion"}
                         )
                         if not day_df_final.empty:
