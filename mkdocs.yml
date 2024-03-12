@@ -1,0 +1,20 @@
+site_name: "INESDATA_MOV"
+site_url: http://localhost
+site_description: Data Generation
+site_author: GMV
+
+repo_url: https://dev-git.labs.gmv.com/gmv-bda/upm/inesdata-mov/data-generation
+
+theme:
+  name: material
+  locale: es
+  highlightjs: true
+  hljs_languages:
+    - python
+
+markdown_extensions:
+  - pymdownx.snippets:
+      check_paths: true
+
+nav:
+  - Home: index.md
