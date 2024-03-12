@@ -1,31 +1,31 @@
-sources:
-  emt:
-    credentials:
-      email: myemail
-      password: mypassword
-      x_client_id: my_x_client_id
-      passkey: my_passkey
-    stops: [1,2]
-    lines: [1,2]
-  aemet:
-    credentials:
-      api_key: my_api_key
+sources:  # data sources credentials
+  emt:  # EMT API: https://apidocs.emtmadrid.es/#api-Block_3_TRANSPORT_BUSEMTMAD
+    credentials:  # EMT auth can be performed via email/password (basic) or via https://mobilitylabs.emtmadrid.es
+      email: myemail  # your email for EMT basic auth
+      password: mypassword  # your password for EMT basic auth
+      x_client_id: my_x_client_id  # your client id for EMT mobilitylabs auth
+      passkey: my_passkey  # your passkey for EMT mobilitylabs auth
+    stops: [1,2]  # EMT stops ids
+    lines: [1,2]  # EMT lines ids
+  aemet:  # AEMET API: https://opendata.aemet.es/dist/index.html#/predicciones-especificas/Predicci%C3%B3n%20por%20municipios%20horaria.%20Tiempo%20actual.
+    credentials:  # basic token auth
+      api_key: my_api_key  # your api key for AEMET auth
   
 
-storage:
-  default: local 
+storage:  # storage settings
+  default: local  # default storage configuration: minio/local
   config: 
-    minio:
-      access_key: my_access_key
-      secret_key: my_secret_key
-      endpoint: minio-endpoint
-      secure: True
-      bucket: my_bucket
-    local:
-      path: /path/to/save/datasets
-  logs:
-    path: /path/to/save/logs
-    level: LOG_LEVEL
+    minio:  # minio config
+      access_key: my_access_key  # minio access key for auth
+      secret_key: my_secret_key  # minio secret key for auth
+      endpoint: minio-endpoint  # minio URL
+      secure: True  # SSL
+      bucket: my_bucket  # minio bucket name
+    local:  # local config
+      path: /path/to/save/datasets  # local storage path for resulting generated datasets
+  logs:  # logging settings
+    path: /path/to/save/logs  # storage path for logs
+    level: LOG_LEVEL  # log level: INFO/DEBUG
 
 
 
