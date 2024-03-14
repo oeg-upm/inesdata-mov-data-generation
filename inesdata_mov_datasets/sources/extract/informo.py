@@ -86,7 +86,7 @@ async def save_informo(config: Settings, data: json):
                 informo_dict_upload,
             )
         else:
-            logger.debug("Already called AEMET today")
+            logger.debug("Already called INFORMO in the past 5 minutes")
 
     if config.storage.default == "local":
         object_name = f"informo_{formated_date}.json"
@@ -105,4 +105,4 @@ async def save_informo(config: Settings, data: json):
             with open(path_save_informo / object_name, "w") as file:
                 file.write(response_json_str)
         else:
-            logger.debug("Already called AEMET today")
+            logger.debug("Already called INFORMO in the past 5 minutes")
