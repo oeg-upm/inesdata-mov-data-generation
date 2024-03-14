@@ -8,6 +8,8 @@ babel==2.14.0
     # via mkdocs-material
 black==23.3.0
     # via -r requirements/requirements_dev.in
+bump2version==1.0.1
+    # via -r requirements/requirements_dev.in
 certifi==2024.2.2
     # via
     #   -c requirements/requirements.txt
@@ -30,15 +32,15 @@ colorama==0.4.6
     #   -c requirements/requirements.txt
     #   mkdocs-material
 coverage[toml]==7.4.3
-    # via
-    #   coverage
-    #   pytest-cov
+    # via pytest-cov
 cryptography==42.0.5
     # via secretstorage
 distlib==0.3.4
     # via virtualenv
 docutils==0.20.1
     # via readme-renderer
+exceptiongroup==1.2.0
+    # via pytest
 filelock==3.4.2
     # via virtualenv
 ghp-import==2.1.0
@@ -186,6 +188,11 @@ six==1.16.0
     #   virtualenv
 snowballstemmer==2.2.0
     # via pydocstyle
+tomli==2.0.1
+    # via
+    #   black
+    #   coverage
+    #   pytest
 twine==4.0.2
     # via -r requirements/requirements_dev.in
 urllib3==2.0.7
