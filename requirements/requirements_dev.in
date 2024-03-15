@@ -7,3 +7,7 @@ pydocstyle==6.3.0           # Analyze docstring conventions
 pytest==8.0.0               # Unit tests
 pytest-cov ==4.1.0          # Coverage
 ruff==0.2.1           # A built-package formattwine
+twine==4.0.2
+mkdocs==1.5.3               # Documentation
+mkdocs-material==9.5.13     # Documentation theme
+bump2version==1.0.1

@@ -8,6 +8,7 @@ __pycache__/
 # Distribution / packaging
 .Python
 env/
+data/
 venv/
 build/
 develop-eggs/
@@ -50,6 +51,7 @@ coverage.xml
 
 # Django stuff:
 *.log
+/logs
 
 # Sphinx documentation
 docs/_build/
@@ -87,4 +89,6 @@ target/
 
 # Mypy cache
 .mypy_cache/
+
+# Dev config
 .config_dev.yaml

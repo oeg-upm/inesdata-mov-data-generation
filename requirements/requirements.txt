@@ -4,24 +4,37 @@
 #
 #    pip-compile requirements/requirements.in
 #
-aiohttp==3.9.3
+aioboto3==12.3.0
     # via -r requirements/requirements.in
+aiobotocore[boto3]==2.11.2
+    # via
+    #   aioboto3
+    #   aiobotocore
+aiofiles==23.2.1
+    # via -r requirements/requirements.in
+aiohttp==3.9.3
+    # via
+    #   -r requirements/requirements.in
+    #   aiobotocore
+aioitertools==0.11.0
+    # via aiobotocore
 aiosignal==1.3.1
     # via aiohttp
 annotated-types==0.6.0
     # via pydantic
-argon2-cffi==23.1.0
-    # via minio
-argon2-cffi-bindings==21.2.0
-    # via argon2-cffi
-async-timeout==4.0.3
-    # via aiohttp
 attrs==23.2.0
     # via aiohttp
+boto3==1.34.34
+    # via aiobotocore
+botocore==1.34.34
+    # via
+    #   aiobotocore
+    #   boto3
+    #   s3transfer
 certifi==2024.2.2
-    # via minio
-cffi==1.16.0
-    # via argon2-cffi-bindings
+    # via requests
+charset-normalizer==3.3.2
+    # via requests
 click==8.1.7
     # via typer
 colorama==0.4.6
@@ -31,25 +44,31 @@ frozenlist==1.4.1
     #   aiohttp
     #   aiosignal
 idna==3.6
-    # via yarl
+    # via
+    #   requests
+    #   yarl
+jmespath==1.0.1
+    # via
+    #   boto3
+    #   botocore
+loguru==0.7.2
+    # via -r requirements/requirements.in
 markdown-it-py==3.0.0
     # via rich
 mdurl==0.1.2
     # via markdown-it-py
-minio==7.2.3
-    # via -r requirements/requirements.in
 multidict==6.0.5
     # via
     #   aiohttp
     #   yarl
-pycparser==2.21
-    # via cffi
-pycryptodome==3.20.0
-    # via minio
-pyyaml==6.0.1
+numpy==1.26.4
+    # via
+    #   pandas
+    #   pyarrow
+pandas==2.2.0
     # via -r requirements/requirements.in
-typing-extensions==4.9.0
-    # via minio
+pyarrow==15.0.0
+    # via -r requirements/requirements.in
 pydantic==2.6.1
     # via pydantic-settings
 pydantic-core==2.16.2
@@ -58,23 +77,46 @@ pydantic-settings==2.1.0
     # via -r requirements/requirements.in
 pygments==2.17.2
     # via rich
+python-dateutil==2.8.2
+    # via
+    #   botocore
+    #   pandas
 python-dotenv==1.0.1
     # via pydantic-settings
+pytz==2024.1
+    # via
+    #   -r requirements/requirements.in
+    #   pandas
+pyyaml==6.0.1
+    # via -r requirements/requirements.in
+requests==2.31.0
+    # via -r requirements/requirements.in
 rich==13.7.0
     # via typer
+s3transfer==0.10.0
+    # via boto3
 shellingham==1.5.4
     # via typer
+six==1.16.0
+    # via python-dateutil
 typer[all]==0.9.0
     # via
     #   -r requirements/requirements.in
     #   typer
 typing-extensions==4.9.0
     # via
-    #   minio
     #   pydantic
     #   pydantic-core
     #   typer
-urllib3==2.2.0
-    # via minio
+tzdata==2024.1
+    # via pandas
+urllib3==2.0.7
+    # via
+    #   botocore
+    #   requests
+wrapt==1.16.0
+    # via aiobotocore
+xmltodict==0.13.0
+    # via -r requirements/requirements.in
 yarl==1.9.4
     # via aiohttp
