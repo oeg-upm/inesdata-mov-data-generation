@@ -383,8 +383,30 @@ def create_emt(settings: Settings, date: str):
             calendar_line_df = join_calendar_line_datasets(calendar_df, line_detail_df)
             df = join_eta_dataset(calendar_line_df, eta_df)
 
-            # sort values
-            df = df.sort_values(by=["datetime", "bus", "line", "stop"])
+            # reorder cols and sort values
+            df = df[
+                [
+                    "date",
+                    "datetime",
+                    "bus",
+                    "line",
+                    "stop",
+                    "positionBusLon",
+                    "positionBusLat",
+                    "positionTypeBus",
+                    "DistanceBus",
+                    "destination",
+                    "deviation",
+                    "StartTime",
+                    "StopTime",
+                    "MinimunFrequency",
+                    "MaximumFrequency",
+                    "isHead",
+                    "dayType",
+                    "strike",
+                    "estimateArrive",
+                ]
+            ].sort_values(by=["datetime", "bus", "line", "stop"])
 
             # export final df
             Path(storage_path + f"/processed/emt/{date}").mkdir(parents=True, exist_ok=True)
