@@ -2,13 +2,47 @@
 import asyncio
 import os
 from pathlib import Path
-
+import botocore
 import aiofiles.os
 import yaml
 from aiobotocore.session import ClientCreatorContext, get_session
+from loguru import logger
 
 from inesdata_mov_datasets.settings import Settings
 
+def list_objs2(client: ClientCreatorContext, bucket: str, prefix: str) -> list:
+    """List objects from s3 bucket.
+
+    Args:
+        client (ClientCreatorContext): Client with s3 connection.
+        bucket (str): Name of the bucket.
+        prefix (str): Prefix to list.
+
+    Returns:
+        list: List of the objects listed.
+    """
+    session = botocore.session.get_session()
+    client = session.create_client(
+        "s3",
+        endpoint_url="http://dev-data.labs.gmv.com:9000",
+        aws_secret_access_key="temporal01",
+        aws_access_key_id="juag",
+        use_ssl=False,
+    )
+
+    #s3 = session.resource("s3").Bucket("inesdata-mov")
+
+    
+    paginator = client.get_paginator("list_objects_v2")
+    keys = []
+    for result in paginator.paginate(Bucket=bucket, Prefix=prefix):
+        if len(keys) % 25000 == 0:
+            logger.debug(len(keys))
+        for c in result.get("Contents", []):
+            logger.debug(c.get("Key"))
+            keys.append(c.get("Key"))
+
+    return keys
 
 def async_download(
     bucket: str,
@@ -72,7 +106,9 @@ async def get_obj(client: ClientCreatorContext, bucket: str, key: str) -> str:
     return obj
 
 
-async def download_obj(client: ClientCreatorContext, bucket: str, key: str, output_path: str):
+async def download_obj(
+    client: ClientCreatorContext, bucket: str, key: str, output_path: str, semaphore=None
+):
     """Download object from s3.
 
     Args:
@@ -81,11 +117,12 @@ async def download_obj(client: ClientCreatorContext, bucket: str, key: str, outp
         key (str): Object to request.
         output_path (str): Local path to store output from minio.
     """
-    await aiofiles.os.makedirs(os.path.dirname(os.path.join(output_path, key)), exist_ok=True)
-    obj = await get_obj(client, bucket, key)
+    async with semaphore:
+        await aiofiles.os.makedirs(os.path.dirname(os.path.join(output_path, key)), exist_ok=True)
+        obj = await get_obj(client, bucket, key)
 
-    async with aiofiles.open(os.path.join(output_path, key), "w") as out:
-        await out.write(obj.decode())
+        async with aiofiles.open(os.path.join(output_path, key), "w") as out:
+            await out.write(obj.decode())
 
 
 async def download_objs(
@@ -113,9 +150,9 @@ async def download_objs(
         aws_secret_access_key=aws_secret_access_key,
         aws_access_key_id=aws_access_key_id,
     ) as client:
-        keys = await list_objs(client, bucket, prefix)
-
-        tasks = [download_obj(client, bucket, key, output_path) for key in keys]
+        keys = list_objs2(client, bucket, prefix)
+        semaphore = asyncio.BoundedSemaphore(10000)
+        tasks = [download_obj(client, bucket, key, output_path, semaphore) for key in keys]
 
         await asyncio.gather(*tasks)
 
