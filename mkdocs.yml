@@ -28,9 +28,12 @@ markdown_extensions:
       emoji_index: !!python/name:material.extensions.emoji.twemoji
       emoji_generator: !!python/name:material.extensions.emoji.to_svg
 
+plugins:
+    - mkdocs-jupyter
 
 nav:
   - 🏠 Home: index.md
   - 📋 Informes:
-    - ✅ Calidad del dato: 
-      - 🚌 EMT ↗: qa/emt_report.html" target="_blank
+    - 🚌 EMT:
+      - Análisis de calidad:  notebooks/emt_qa.ipynb
+      - Profile ↗: qa/emt_report.html" target="_blank
