@@ -498,6 +498,7 @@ async def get_emt(config: Settings):
                                 / "emt"
                                 / formatted_date_slash
                                 / "eta"
+                                / formatted_date[formatted_date.index("T") + 1: formatted_date.index("T") + 3] #Select the hour of the date
                                 / f"eta_{stop_id}_{formatted_date}.json"
                             )
                             eta_dict_upload[object_eta_name] = response_json_str
@@ -510,6 +511,7 @@ async def get_emt(config: Settings):
                                 / "emt"
                                 / formatted_date_slash
                                 / "eta"
+                                / formatted_date[formatted_date.index("T") + 1: formatted_date.index("T") + 3] #Select the hour of the date
                             )
                             os.makedirs(path_dir_eta, exist_ok=True)
                             with open(os.path.join(path_dir_eta, object_eta_name), "w") as file:
@@ -566,6 +568,7 @@ async def get_emt(config: Settings):
                                     / "emt"
                                     / formatted_date_slash
                                     / "eta"
+                                    / formatted_date[formatted_date.index("T") + 1: formatted_date.index("T") + 3] #Select the hour of the date
                                     / f"eta_{stop_id}_{formatted_date}.json"
                                 )
                                 eta_dict_upload[object_eta_name] = response_json_str
@@ -578,6 +581,7 @@ async def get_emt(config: Settings):
                                     / "emt"
                                     / formatted_date_slash
                                     / "eta"
+                                    / formatted_date[formatted_date.index("T") + 1: formatted_date.index("T") + 3] #Select the hour of the date
                                 )
                                 os.makedirs(path_dir_eta, exist_ok=True)
                                 with open(
