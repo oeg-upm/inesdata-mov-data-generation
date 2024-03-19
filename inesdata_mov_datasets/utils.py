@@ -25,8 +25,8 @@ def list_objs2(client: ClientCreatorContext, bucket: str, prefix: str) -> list:
     client = session.create_client(
         "s3",
         endpoint_url="http://dev-data.labs.gmv.com:9000",
-        aws_secret_access_key="temporal01",
-        aws_access_key_id="juag",
+        aws_secret_access_key="BScID2EyoF0Cgy9oTSTX!",
+        aws_access_key_id="jfog",
         use_ssl=False,
     )
 
@@ -36,10 +36,9 @@ def list_objs2(client: ClientCreatorContext, bucket: str, prefix: str) -> list:
     paginator = client.get_paginator("list_objects_v2")
     keys = []
     for result in paginator.paginate(Bucket=bucket, Prefix=prefix):
-        if len(keys) % 25000 == 0:
+        if len(keys) % 1000 == 0:
             logger.debug(len(keys))
         for c in result.get("Contents", []):
-            logger.debug(c.get("Key"))
             keys.append(c.get("Key"))
 
     return keys
