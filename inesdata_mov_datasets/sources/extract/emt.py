@@ -176,7 +176,7 @@ async def token_control(config: Settings, date_slash: str, date_day: str) -> str
        str: Token from EMT Login.
     """
     if config.storage.default == "minio":
-        object_login_name = Path("raw") / "emt" / date_slash / "login" / f"login_{date_day}.json"
+        object_login_name = Path("test") / "emt" / date_slash / "login" / f"login_{date_day}.json"
 
         # Check if file already exists so we have made the call already
         if not await check_s3_file_exists(
@@ -309,7 +309,7 @@ async def get_emt(config: Settings):
             for line_id in config.sources.emt.lines:
                 if config.storage.default == "minio":
                     object_line_detail_name = (
-                        Path("raw")
+                        Path("test")
                         / "emt"
                         / formatted_date_slash
                         / "line_detail"
@@ -359,7 +359,7 @@ async def get_emt(config: Settings):
             # Calendar endpoint task
             if config.storage.default == "minio":
                 object_calendar_name = (
-                    Path("raw")
+                    Path("test")
                     / "emt"
                     / formatted_date_slash
                     / "calendar"
@@ -419,7 +419,7 @@ async def get_emt(config: Settings):
                         if response["code"] == "00":
                             if config.storage.default == "minio":
                                 object_line_detail_name = (
-                                    Path("raw")
+                                    Path("test")
                                     / "emt"
                                     / formatted_date_slash
                                     / "line_detail"
@@ -494,7 +494,7 @@ async def get_emt(config: Settings):
                     if response["code"] == "00":
                         if config.storage.default == "minio":
                             object_eta_name = (
-                                Path("raw")
+                                Path("test")
                                 / "emt"
                                 / formatted_date_slash
                                 / "eta"
@@ -564,7 +564,7 @@ async def get_emt(config: Settings):
                         if response["code"] == "00":
                             if config.storage.default == "minio":
                                 object_eta_name = (
-                                    Path("raw")
+                                    Path("test")
                                     / "emt"
                                     / formatted_date_slash
                                     / "eta"

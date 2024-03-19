@@ -66,7 +66,7 @@ async def save_aemet(config: Settings, data: json):
     if config.storage.default == "minio":
         # Define object name
         object_name = (
-            Path("raw") / "aemet" / formatted_date_slash / f"aemet_{formatted_date_day}.json"
+            Path("test") / "aemet" / formatted_date_slash / f"aemet_{formatted_date_day}.json"
         )
 
         if not await check_s3_file_exists(
