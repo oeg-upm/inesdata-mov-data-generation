@@ -8,7 +8,7 @@ from pathlib import Path
 import pandas as pd
 from loguru import logger
 
-from inesdata_mov_datasets.handlers.logger import import_create_logger
+from inesdata_mov_datasets.handlers.logger import instantiate_logger
 from inesdata_mov_datasets.settings import Settings
 from inesdata_mov_datasets.utils import async_download
 
@@ -371,7 +371,7 @@ def create_emt(settings: Settings, date: str):
         date (str): a date formatted in YYYY/MM/DD
     """
     # Logger
-    import_create_logger(settings, "EMT")
+    instantiate_logger(settings, "EMT", "create")
     start = datetime.now()
     storage_path = settings.storage.config.local.path
     logger.info(f"Creating EMT dataset for date: {date}")

@@ -8,7 +8,7 @@ from pathlib import Path
 import requests
 from loguru import logger
 
-from inesdata_mov_datasets.handlers.logger import import_extract_logger
+from inesdata_mov_datasets.handlers.logger import instantiate_logger
 from inesdata_mov_datasets.settings import Settings
 from inesdata_mov_datasets.utils import check_local_file_exists, check_s3_file_exists, upload_objs
 
@@ -21,7 +21,7 @@ async def get_aemet(config: Settings):
     """
     try:
         # Logger
-        import_extract_logger(config, "AEMET")
+        instantiate_logger(config, "AEMET", "extract")
         logger.info("Extracting AEMET")
         now = datetime.datetime.now()
 
