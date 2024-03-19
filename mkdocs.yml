@@ -12,8 +12,9 @@ theme:
   hljs_languages:
     - python
   features:
-  - navigation.instant
-  - content.code.copy
+    - tabs
+    - navigation.instant
+    - content.code.copy
 
 markdown_extensions:
   - attr_list
@@ -29,4 +30,7 @@ markdown_extensions:
 
 
 nav:
-  - Home: index.md
+  - 🏠 Home: index.md
+  - 📋 Informes:
+    - ✅ Calidad del dato: 
+      - 🚌 EMT ↗: qa/emt_report.html" target="_blank
