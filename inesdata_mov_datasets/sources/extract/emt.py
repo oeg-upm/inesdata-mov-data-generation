@@ -494,7 +494,7 @@ async def get_emt(config: Settings):
                     if response["code"] == "00":
                         if config.storage.default == "minio":
                             object_eta_name = (
-                                Path("test")
+                                Path("raw")
                                 / "emt"
                                 / formatted_date_slash
                                 / "eta"
@@ -564,7 +564,7 @@ async def get_emt(config: Settings):
                         if response["code"] == "00":
                             if config.storage.default == "minio":
                                 object_eta_name = (
-                                    Path("test")
+                                    Path("raw")
                                     / "emt"
                                     / formatted_date_slash
                                     / "eta"
