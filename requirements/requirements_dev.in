@@ -10,4 +10,5 @@ ruff==0.2.1           # A built-package formattwine
 twine==4.0.2
 mkdocs==1.5.3               # Documentation
 mkdocs-material==9.5.13     # Documentation theme
+mkdocs-jupyter==0.16.1      # Documentation notebooks
 bump2version==1.0.1
