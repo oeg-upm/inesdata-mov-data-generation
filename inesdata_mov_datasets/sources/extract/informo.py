@@ -63,7 +63,7 @@ async def save_informo(config: Settings, data: json):
     if config.storage.default == "minio":
         # Define the object name
         object_name = (
-            Path("test") / "informo" / formatted_date_slash / f"informo_{formated_date}.json"
+            Path("raw") / "informo" / formatted_date_slash / f"informo_{formated_date}.json"
         )
         # Check if the Minio object exists
         if not await check_s3_file_exists(

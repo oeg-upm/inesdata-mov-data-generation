@@ -304,7 +304,7 @@ def create_eta_emt(settings: Settings, date: str) -> pd.DataFrame:
         if settings.storage.default != "local":
             async_download(
                 bucket=storage_config.minio.bucket,
-                prefix=f"test/emt/{date}/eta/08/",
+                prefix=f"raw/emt/{date}/eta/",
                 output_path=storage_path,
                 endpoint_url=storage_config.minio.endpoint,
                 aws_access_key_id=storage_config.minio.access_key,
