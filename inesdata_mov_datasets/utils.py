@@ -3,6 +3,7 @@ import asyncio
 import os
 from pathlib import Path
 import botocore
+from botocore.client import Config as BotoConfig
 import aiofiles.os
 import yaml
 from aiobotocore.session import ClientCreatorContext, get_session
@@ -21,6 +22,9 @@ def list_objs2(client: ClientCreatorContext, bucket: str, prefix: str) -> list:
     Returns:
         list: List of the objects listed.
     """
+    
+    TIMEOUT = 3
+    config = BotoConfig(connect_timeout=TIMEOUT, retries={"mode": "standard"})
     session = botocore.session.get_session()
     client = session.create_client(
         "s3",
@@ -28,6 +32,7 @@ def list_objs2(client: ClientCreatorContext, bucket: str, prefix: str) -> list:
         aws_secret_access_key="BScID2EyoF0Cgy9oTSTX!",
         aws_access_key_id="jfog",
         use_ssl=False,
+        config=config,
     )
 
     #s3 = session.resource("s3").Bucket("inesdata-mov")
