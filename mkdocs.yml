@@ -37,3 +37,9 @@ nav:
     - 🚌 EMT:
       - Análisis de calidad:  notebooks/emt_qa.ipynb
       - Profile ↗: qa/emt_report.html" target="_blank
+    - 🌥️ AEMET:
+      - Análisis de calidad:  notebooks/aemet_qa.ipynb
+      - Profile ↗: qa/aemet_report.html" target="_blank
+    - 🚦 INFORMO:
+      - Análisis de calidad:  notebooks/informo_qa.ipynb
+      - Profile ↗: qa/informo_report.html" target="_blank
