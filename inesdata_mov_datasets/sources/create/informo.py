@@ -9,7 +9,7 @@ from pathlib import Path
 import pandas as pd
 from loguru import logger
 
-from inesdata_mov_datasets.handlers.logger import import_create_logger
+from inesdata_mov_datasets.handlers.logger import instantiate_logger
 from inesdata_mov_datasets.settings import Settings
 from inesdata_mov_datasets.utils import download_objs
 
@@ -105,7 +105,7 @@ def create_informo(settings: Settings, date: str):
     """
     try:
         # Logger
-        import_create_logger(settings, "INFORMO")
+        instantiate_logger(settings, "INFORMO", "create")
         # Download day's raw data from minio
         logger.info(f"Creating INFORMO dataset for date: {date}")
 

@@ -77,7 +77,6 @@ target/
 
 # Jupyter NB Checkpoints
 .ipynb_checkpoints/
-*.html
 *.pkl
 *.csv
 # Mac OS-specific storage files
