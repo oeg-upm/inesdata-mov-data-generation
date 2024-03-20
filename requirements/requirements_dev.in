@@ -10,5 +10,9 @@ ruff==0.2.1           # A built-package formattwine
 twine==4.0.2
 mkdocs==1.5.3               # Documentation
 mkdocs-material==9.5.13     # Documentation theme
-mkdocs-jupyter==0.16.1      # Documentation notebooks
+# Jupyter notebooks
+ipynb==0.5.1
+ipywidgets==8.1.2
+ipykernel==6.29.3
+ydata-profiling==4.6.5
 bump2version==1.0.1
