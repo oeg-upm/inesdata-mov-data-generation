@@ -12,8 +12,9 @@ theme:
   hljs_languages:
     - python
   features:
-  - navigation.instant
-  - content.code.copy
+    - tabs
+    - navigation.instant
+    - content.code.copy
 
 markdown_extensions:
   - attr_list
@@ -27,6 +28,18 @@ markdown_extensions:
       emoji_index: !!python/name:material.extensions.emoji.twemoji
       emoji_generator: !!python/name:material.extensions.emoji.to_svg
 
+plugins:
+    - mkdocs-jupyter
 
 nav:
-  - Home: index.md
+  - 🏠 Home: index.md
+  - 📋 Informes:
+    - 🚌 EMT:
+      - Análisis de calidad:  notebooks/emt_qa.ipynb
+      - Profile ↗: qa/emt_report.html" target="_blank
+    - 🌥️ AEMET:
+      - Análisis de calidad:  notebooks/aemet_qa.ipynb
+      - Profile ↗: qa/aemet_report.html" target="_blank
+    - 🚦 INFORMO:
+      - Análisis de calidad:  notebooks/informo_qa.ipynb
+      - Profile ↗: qa/informo_report.html" target="_blank

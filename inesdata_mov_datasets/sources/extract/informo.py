@@ -8,7 +8,7 @@ import requests
 import xmltodict
 from loguru import logger
 
-from inesdata_mov_datasets.handlers.logger import import_extract_logger
+from inesdata_mov_datasets.handlers.logger import instantiate_logger
 from inesdata_mov_datasets.settings import Settings
 from inesdata_mov_datasets.utils import check_local_file_exists, check_s3_file_exists, upload_objs
 
@@ -21,7 +21,7 @@ async def get_informo(config: Settings):
     """
     try:
         # Logger
-        import_extract_logger(config, "INFORMO")
+        instantiate_logger(config, "INFORMO", "extract")
         logger.info("Extracting INFORMO")
         now = datetime.datetime.now()
         url_informo = "https://informo.madrid.es/informo/tmadrid/pm.xml"

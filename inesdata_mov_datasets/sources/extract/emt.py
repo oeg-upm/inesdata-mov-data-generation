@@ -11,7 +11,7 @@ import pytz
 import requests
 from loguru import logger
 
-from inesdata_mov_datasets.handlers.logger import import_extract_logger
+from inesdata_mov_datasets.handlers.logger import instantiate_logger
 from inesdata_mov_datasets.settings import Settings
 from inesdata_mov_datasets.utils import (
     check_local_file_exists,
@@ -268,7 +268,7 @@ async def get_emt(config: Settings):
     """
     try:
         # Logger
-        import_extract_logger(config, "EMT")
+        instantiate_logger(config, "EMT", "extract")
         logger.info("Extracting EMT")
 
         # Get the timezone from Madrid and formated the dates for the object_name of the files

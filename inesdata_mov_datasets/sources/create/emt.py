@@ -8,7 +8,7 @@ from pathlib import Path
 import pandas as pd
 from loguru import logger
 
-from inesdata_mov_datasets.handlers.logger import import_create_logger
+from inesdata_mov_datasets.handlers.logger import instantiate_logger
 from inesdata_mov_datasets.settings import Settings
 from inesdata_mov_datasets.utils import async_download
 
@@ -371,7 +371,7 @@ def create_emt(settings: Settings, date: str):
         date (str): a date formatted in YYYY/MM/DD
     """
     # Logger
-    import_create_logger(settings, "EMT")
+    instantiate_logger(settings, "EMT", "create")
     start = datetime.now()
     storage_path = settings.storage.config.local.path
     logger.info(f"Creating EMT dataset for date: {date}")
@@ -383,8 +383,30 @@ def create_emt(settings: Settings, date: str):
             calendar_line_df = join_calendar_line_datasets(calendar_df, line_detail_df)
             df = join_eta_dataset(calendar_line_df, eta_df)
 
-            # sort values
-            df = df.sort_values(by=["datetime", "bus", "line", "stop"])
+            # reorder cols and sort values
+            df = df[
+                [
+                    "date",
+                    "datetime",
+                    "bus",
+                    "line",
+                    "stop",
+                    "positionBusLon",
+                    "positionBusLat",
+                    "positionTypeBus",
+                    "DistanceBus",
+                    "destination",
+                    "deviation",
+                    "StartTime",
+                    "StopTime",
+                    "MinimunFrequency",
+                    "MaximumFrequency",
+                    "isHead",
+                    "dayType",
+                    "strike",
+                    "estimateArrive",
+                ]
+            ].sort_values(by=["datetime", "bus", "line", "stop"])
 
             # export final df
             Path(storage_path + f"/processed/emt/{date}").mkdir(parents=True, exist_ok=True)
