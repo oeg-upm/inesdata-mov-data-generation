@@ -302,6 +302,7 @@ def create_eta_emt(settings: Settings, date: str) -> pd.DataFrame:
         storage_config = settings.storage.config
         storage_path = storage_config.local.path  # tmpdirname
         if settings.storage.default != "local":
+
             async_download(
                 bucket=storage_config.minio.bucket,
                 prefix=f"raw/emt/{date}/eta/",
