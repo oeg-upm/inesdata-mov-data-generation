@@ -23,8 +23,6 @@ def list_objs2(client: ClientCreatorContext, bucket: str, prefix: str) -> list:
         list: List of the objects listed.
     """
     
-    TIMEOUT = 3
-    config = BotoConfig(connect_timeout=TIMEOUT, retries={"mode": "standard"})
     session = botocore.session.get_session()
     client = session.create_client(
         "s3",
@@ -32,7 +30,6 @@ def list_objs2(client: ClientCreatorContext, bucket: str, prefix: str) -> list:
         aws_secret_access_key="BScID2EyoF0Cgy9oTSTX!",
         aws_access_key_id="jfog",
         use_ssl=False,
-        config=config,
     )
 
     #s3 = session.resource("s3").Bucket("inesdata-mov")
@@ -154,11 +151,36 @@ async def download_objs(
         aws_secret_access_key=aws_secret_access_key,
         aws_access_key_id=aws_access_key_id,
     ) as client:
-        keys = list_objs2(client, bucket, prefix)
-        semaphore = asyncio.BoundedSemaphore(10000)
-        tasks = [download_obj(client, bucket, key, output_path, semaphore) for key in keys]
+        
+        if "/eta" in prefix:
+            metadata_path = prefix + "metadata.txt"
+            response = await client.get_object(Bucket = bucket, Key = metadata_path)
+            async with response['Body'] as stream:
+                keys = await stream.read()
+                keys = keys.decode('utf-8')
 
-        await asyncio.gather(*tasks)
+            semaphore = asyncio.BoundedSemaphore(10000)
+            keys_list = keys.split('\n')
+            tasks = [download_obj(client, bucket, key, output_path, semaphore) for key in keys_list]
+            
+            '''
+            response  = await client.list_objects_v2(Bucket=bucket, Prefix=prefix, Delimiter='/')
+            list_prefix = [prefix['Prefix'] for prefix in response.get('CommonPrefixes', [])]
+            for hour_prefix in list_prefix[:2]:
+                logger.debug(f"Hour preffix {hour_prefix}")
+                keys = list_objs2(client, bucket, hour_prefix)
+                semaphore = asyncio.BoundedSemaphore(10000)
+                tasks = [download_obj(client, bucket, key, output_path, semaphore) for key in keys]
+            '''
+
+            await asyncio.gather(*tasks)
+            
+        else:
+            keys = list_objs2(client, bucket, prefix)
+            semaphore = asyncio.BoundedSemaphore(10000)
+            tasks = [download_obj(client, bucket, key, output_path, semaphore) for key in keys]
+
+            await asyncio.gather(*tasks)
 
 
 async def read_obj(
@@ -204,7 +226,36 @@ async def upload_obj(client: ClientCreatorContext, bucket: str, key: str, object
     """
     await client.put_object(Bucket=bucket, Key=str(key), Body=object_value.encode("utf-8"))
 
+def upload_metadata(
+    bucket: str,
+    endpoint_url: str,
+    aws_access_key_id: str,
+    aws_secret_access_key: str,
+    keys: list
+):
+    session = botocore.session.get_session()
+    client = session.create_client(
+        "s3",
+        endpoint_url=endpoint_url,
+        aws_secret_access_key=aws_secret_access_key,
+        aws_access_key_id=aws_access_key_id,
+        use_ssl=False,
+    )
+    #We get the prefix of the eta bucket from a name of a key
+    prefix = "/".join(keys[0].split('/')[:-1]) + '/metadata.txt'
+    try:
+        response = client.get_object(Bucket=bucket, Key=prefix)
+        #we get the previous content of the file
+        content = response['Body'].read().decode('utf-8')
+        #add the new names of files written
+        new_content = content + '\n' + '\n'.join(keys)
+    except :
+        #if metadata file does not exist
+        new_content = '\n'.join(keys)
 
+    # upload s3
+    client.put_object(Bucket=bucket, Key=prefix, Body=new_content.encode('utf-8'))
+    
 async def upload_objs(
     bucket: str,
     endpoint_url: str,
