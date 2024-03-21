@@ -33,7 +33,7 @@ plugins:
 
 nav:
   - 🏠 Home: index.md
-  - 📋 Informes:
+  - ✅ Calidad:
     - 🚌 EMT:
       - Análisis de calidad:  notebooks/emt_qa.ipynb
       - Profile ↗: qa/emt_report.html" target="_blank
