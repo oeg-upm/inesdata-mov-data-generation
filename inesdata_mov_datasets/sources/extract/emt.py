@@ -556,7 +556,6 @@ async def get_emt(config: Settings):
 
             # Retry the failed petitions
             if errors_eta > 0:
-                eta_dict_upload = {}
                 list_stops_error_retry = []
                 eta_tasks2 = []
                 errors_eta_retry = 0
