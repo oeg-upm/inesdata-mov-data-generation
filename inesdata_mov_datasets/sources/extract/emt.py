@@ -529,8 +529,8 @@ async def get_emt(config: Settings):
 
             # Upload the dict to s3 asynchronously if dict contains something (This means minio flag in convig was enabled)
             if eta_dict_upload:
+                #List of str names of objects uploaded into s3
                 list_keys_str = [str(key.parent) + '/' + str(key.name) for key in eta_dict_upload]
-                
                 logger.debug(f"Uploading {len(list_keys_str)} files")
 
                 await upload_objs(
@@ -615,8 +615,8 @@ async def get_emt(config: Settings):
 
             # Upload the dict to s3 asynchronously if dict contains something (This means minio flag in convig was enabled)
             if eta_dict_upload:
+                #List of str names of objects uploaded into s3
                 list_keys_str = [str(key.parent) + '/' + str(key.name) for key in eta_dict_upload]
-                
                 logger.debug(f"Uploading {len(list_keys_str)} files")
                 await upload_objs(
                     config.storage.config.minio.bucket,
