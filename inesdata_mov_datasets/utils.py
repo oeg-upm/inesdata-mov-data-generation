@@ -211,16 +211,17 @@ def upload_metadata(
         aws_access_key_id=aws_access_key_id,
         use_ssl=False,
     )
-    #We get the prefix of the eta bucket from a name of a key
+    #Get the prefix of the metadata from the first name of the object from the keys list
     prefix = "/".join(keys[0].split('/')[:-1]) + '/metadata.txt'
     try:
+        #If file exists in the bucket
         response = client.get_object(Bucket=bucket, Key=prefix)
-        #we get the previous content of the file
+        #Get the previous content of the file
         content = response['Body'].read().decode('utf-8')
         #add the new names of files written
         new_content = content + '\n' + '\n'.join(keys)
     except :
-        #if metadata file does not exist
+        #if metadata file does not exist (first execution of the day)
         new_content = '\n'.join(keys)
 
     # upload s3
