@@ -11,13 +11,15 @@ from loguru import logger
 
 from inesdata_mov_datasets.settings import Settings
 
-def list_objs2(client: ClientCreatorContext, bucket: str, prefix: str) -> list:
+def list_objs(bucket: str, prefix: str, endpoint_url: str, aws_secret_access_key: str, aws_access_key_id: str) -> list:
     """List objects from s3 bucket.
 
     Args:
-        client (ClientCreatorContext): Client with s3 connection.
         bucket (str): Name of the bucket.
         prefix (str): Prefix to list.
+        endpoint_url (str): url of minio bucket
+        aws_access_key_id (str): minio user
+        aws_secret_access_key (str): minio password
 
     Returns:
         list: List of the objects listed.
@@ -26,20 +28,14 @@ def list_objs2(client: ClientCreatorContext, bucket: str, prefix: str) -> list:
     session = botocore.session.get_session()
     client = session.create_client(
         "s3",
-        endpoint_url="http://dev-data.labs.gmv.com:9000",
-        aws_secret_access_key="BScID2EyoF0Cgy9oTSTX!",
-        aws_access_key_id="jfog",
-        use_ssl=False,
+        endpoint_url=endpoint_url,
+        aws_secret_access_key=aws_secret_access_key,
+        aws_access_key_id=aws_access_key_id,
     )
 
-    #s3 = session.resource("s3").Bucket("inesdata-mov")
-
-    
     paginator = client.get_paginator("list_objects_v2")
     keys = []
     for result in paginator.paginate(Bucket=bucket, Prefix=prefix):
-        if len(keys) % 1000 == 0:
-            logger.debug(len(keys))
         for c in result.get("Contents", []):
             keys.append(c.get("Key"))
 
@@ -69,26 +65,6 @@ def async_download(
             bucket, prefix, output_path, endpoint_url, aws_access_key_id, aws_secret_access_key
         )
     )
-
-
-async def list_objs(client: ClientCreatorContext, bucket: str, prefix: str) -> list:
-    """List objects from s3 bucket.
-
-    Args:
-        client (ClientCreatorContext): Client with s3 connection.
-        bucket (str): Name of the bucket.
-        prefix (str): Prefix to list.
-
-    Returns:
-        list: List of the objects listed.
-    """
-    paginator = client.get_paginator("list_objects")
-    keys = []
-    async for result in paginator.paginate(Bucket=bucket, Prefix=prefix):
-        for c in result.get("Contents", []):
-            keys.append(c.get("Key"))
-
-    return keys
 
 
 async def get_obj(client: ClientCreatorContext, bucket: str, key: str) -> str:
@@ -152,6 +128,8 @@ async def download_objs(
         aws_access_key_id=aws_access_key_id,
     ) as client:
         
+        logger.debug("Downloading files from s3")
+        
         if "/eta" in prefix:
             metadata_path = prefix + "metadata.txt"
             response = await client.get_object(Bucket = bucket, Key = metadata_path)
@@ -161,22 +139,14 @@ async def download_objs(
 
             semaphore = asyncio.BoundedSemaphore(10000)
             keys_list = keys.split('\n')
+            logger.debug(f"Downloading {len(keys_list)} files from emt endpoint")
             tasks = [download_obj(client, bucket, key, output_path, semaphore) for key in keys_list]
             
-            '''
-            response  = await client.list_objects_v2(Bucket=bucket, Prefix=prefix, Delimiter='/')
-            list_prefix = [prefix['Prefix'] for prefix in response.get('CommonPrefixes', [])]
-            for hour_prefix in list_prefix[:2]:
-                logger.debug(f"Hour preffix {hour_prefix}")
-                keys = list_objs2(client, bucket, hour_prefix)
-                semaphore = asyncio.BoundedSemaphore(10000)
-                tasks = [download_obj(client, bucket, key, output_path, semaphore) for key in keys]
-            '''
 
             await asyncio.gather(*tasks)
             
         else:
-            keys = list_objs2(client, bucket, prefix)
+            keys = list_objs(bucket, prefix, endpoint_url, aws_secret_access_key, aws_access_key_id)
             semaphore = asyncio.BoundedSemaphore(10000)
             tasks = [download_obj(client, bucket, key, output_path, semaphore) for key in keys]
 
