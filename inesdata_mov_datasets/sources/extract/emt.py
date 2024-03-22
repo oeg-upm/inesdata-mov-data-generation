@@ -538,7 +538,8 @@ async def get_emt(config: Settings):
 
             logger.error(f"{errors_ld} errors in Line Detail")
             logger.error(f"{errors_eta} errors in ETA, list of stops erroring: {list_stops_error}")
-
+            eta_dict_upload = {}
+            
             # Retry the failed petitions
             if errors_eta > 0:
                 eta_dict_upload = {}
