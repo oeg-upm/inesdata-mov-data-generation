@@ -132,6 +132,7 @@ async def download_objs(
         
         if "/eta" in prefix:
             metadata_path = prefix + "metadata.txt"
+            
             response = await client.get_object(Bucket = bucket, Key = metadata_path)
             async with response['Body'] as stream:
                 keys = await stream.read()
@@ -209,8 +210,9 @@ def upload_metadata(
         endpoint_url=endpoint_url,
         aws_secret_access_key=aws_secret_access_key,
         aws_access_key_id=aws_access_key_id,
-        use_ssl=False,
+        use_ssl=False, #TODO Change all s3 function connections to manage the ssl by config parameter
     )
+    
     #Get the prefix of the metadata from the first name of the object from the keys list
     prefix = "/".join(keys[0].split('/')[:-1]) + '/metadata.txt'
     try:
