@@ -11,6 +11,7 @@ from loguru import logger
 
 from inesdata_mov_datasets.settings import Settings
 
+
 def list_objs(bucket: str, prefix: str, endpoint_url: str, aws_secret_access_key: str, aws_access_key_id: str) -> list:
     """List objects from s3 bucket.
 
