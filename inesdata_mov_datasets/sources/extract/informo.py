@@ -3,6 +3,7 @@ import datetime
 import json
 import traceback
 from pathlib import Path
+import pytz
 
 import requests
 import xmltodict
@@ -50,11 +51,14 @@ async def save_informo(config: Settings, data: json):
     # Get the last update date from the response
     date_from_file = data["pms"]["fecha_hora"]
     dt = datetime.datetime.strptime(date_from_file, "%d/%m/%Y %H:%M:%S")
+    
 
-    # Formatear el objeto datetime en el formato deseado
+    # Format date
     formated_date = dt.strftime("%Y-%m-%dT%H%M")
 
-    current_datetime = datetime.datetime.now().replace(second=0)  # current date without seconds
+    # Get the timezone from Madrid and formated the dates for the object_name of the files
+    europe_timezone = pytz.timezone("Europe/Madrid")
+    current_datetime = datetime.datetime.now(europe_timezone).replace(second=0)
 
     formatted_date_slash = current_datetime.strftime(
         "%Y/%m/%d"

@@ -4,6 +4,7 @@ import datetime
 import json
 import traceback
 from pathlib import Path
+import pytz
 
 import requests
 from loguru import logger
@@ -55,7 +56,10 @@ async def save_aemet(config: Settings, data: json):
         config (Settings): Object with the config file.
         data (json): Data with weather in json format.
     """
-    current_datetime = datetime.datetime.now().replace(second=0)  # current date without seconds
+    
+    # Get the timezone from Madrid and formated the dates for the object_name of the files
+    europe_timezone = pytz.timezone("Europe/Madrid")
+    current_datetime = datetime.datetime.now(europe_timezone).replace(second=0)
     formatted_date_day = current_datetime.strftime(
         "%Y%m%d"
     )  # formatted date year|month|day all together
