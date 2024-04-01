@@ -140,12 +140,27 @@ async def download_objs(
 
             semaphore = asyncio.BoundedSemaphore(10000)
             keys_list = keys.split('\n')
-            logger.debug(f"Downloading {len(keys_list)} files from emt endpoint")
-            tasks = [download_obj(client, bucket, key, output_path, semaphore) for key in keys_list]
             
+            #eliminate blank strings (EOL)
+            keys_list = [elemento.rstrip() for elemento in keys_list if elemento.rstrip() != '']
 
-            await asyncio.gather(*tasks)
+            tasks = []
+            logger.debug(f"Downloading {len(keys_list)} files from emt endpoint")
+            completed_tasks_count = 0
+            remaining_tasks = 0
             
+            for i, key in enumerate(keys_list, 1):
+                tasks.append(download_obj(client, bucket, key, output_path, semaphore))
+                if i % 10000 == 0:
+                    await asyncio.gather(*tasks)
+                    completed_tasks_count+=10000
+                    remaining_tasks = len(keys_list) - completed_tasks_count
+                    logger.debug(f"Finished {completed_tasks_count} tasks. {remaining_tasks} left remaining tasks.")
+                    tasks = []
+            if tasks:
+                await asyncio.gather(*tasks)
+                logger.debug(f"Finished all tasks. {len(keys_list)}/{len(keys_list)}")
+                        
         else:
             keys = list_objs(bucket, prefix, endpoint_url, aws_secret_access_key, aws_access_key_id)
             semaphore = asyncio.BoundedSemaphore(10000)
