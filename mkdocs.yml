@@ -37,12 +37,12 @@ nav:
     - 🚌 EMT:
       - Análisis de calidad:  notebooks/emt_qa.ipynb
       - Profile ↗: qa/emt_report.html" target="_blank
-      - EDA: notebooks/eda/emt_eda.ipynb
+      - Análisis EDA: notebooks/eda/emt_eda.ipynb
     - 🌥️ AEMET:
       - Análisis de calidad:  notebooks/aemet_qa.ipynb
       - Profile ↗: qa/aemet_report.html" target="_blank
-      - EDA: notebooks/eda/aemet_eda.ipynb
+      - Análisis EDA: notebooks/eda/aemet_eda.ipynb
     - 🚦 INFORMO:
       - Análisis de calidad:  notebooks/informo_qa.ipynb
       - Profile ↗: qa/informo_report.html" target="_blank
-      - EDA: notebooks/eda/informo_eda.ipynb
+      - Análisis EDA: notebooks/eda/informo_eda.ipynb
