@@ -1,0 +1,920 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Data Generation">
+      
+      
+        <meta name="author" content="GMV">
+      
+      
+        <link rel="canonical" href="http://localhost/">
+      
+      
+      
+        <link rel="next" href="notebooks/emt_qa/">
+      
+      
+      <link rel="icon" href="assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.5.3, mkdocs-material-9.5.13">
+    
+    
+      
+        <title>INESDATA_MOV</title>
+      
+    
+    
+      <link rel="stylesheet" href="assets/stylesheets/main.7e359304.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL(".",location),__md_hash=e=>[...e].reduce((e,_)=>(e<<5)-e+_.charCodeAt(0),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+    
+  </head>
+  
+  
+    <body dir="ltr">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#inesdata-mov-datasets" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="." title="INESDATA_MOV" class="md-header__button md-logo" aria-label="INESDATA_MOV" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54Z"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3V6m0 5h18v2H3v-2m0 5h18v2H3v-2Z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            INESDATA_MOV
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              🏠 Home
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+    
+      <script>var media,input,key,value,palette=__md_get("__palette");if(palette&&palette.color){"(prefers-color-scheme)"===palette.color.media&&(media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']"),palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent"));for([key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/oeg-upm/inesdata-mov-data-generation" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 6.5.1 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2023 Fonticons, Inc.--><path d="M439.55 236.05 244 40.45a28.87 28.87 0 0 0-40.81 0l-40.66 40.63 51.52 51.52c27.06-9.14 52.68 16.77 43.39 43.68l49.66 49.66c34.23-11.8 61.18 31 35.47 56.69-26.49 26.49-70.21-2.87-56-37.34L240.22 199v121.85c25.3 12.54 22.26 41.85 9.08 55a34.34 34.34 0 0 1-48.55 0c-17.57-17.6-11.07-46.91 11.25-56v-123c-20.8-8.51-24.6-30.74-18.64-45L142.57 101 8.45 235.14a28.86 28.86 0 0 0 0 40.81l195.61 195.6a28.86 28.86 0 0 0 40.8 0l194.69-194.69a28.86 28.86 0 0 0 0-40.81z"/></svg>
+  </div>
+  <div class="md-source__repository">
+    GitHub
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="." title="INESDATA_MOV" class="md-nav__button md-logo" aria-label="INESDATA_MOV" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54Z"/></svg>
+
+    </a>
+    INESDATA_MOV
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/oeg-upm/inesdata-mov-data-generation" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 6.5.1 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2023 Fonticons, Inc.--><path d="M439.55 236.05 244 40.45a28.87 28.87 0 0 0-40.81 0l-40.66 40.63 51.52 51.52c27.06-9.14 52.68 16.77 43.39 43.68l49.66 49.66c34.23-11.8 61.18 31 35.47 56.69-26.49 26.49-70.21-2.87-56-37.34L240.22 199v121.85c25.3 12.54 22.26 41.85 9.08 55a34.34 34.34 0 0 1-48.55 0c-17.57-17.6-11.07-46.91 11.25-56v-123c-20.8-8.51-24.6-30.74-18.64-45L142.57 101 8.45 235.14a28.86 28.86 0 0 0 0 40.81l195.61 195.6a28.86 28.86 0 0 0 40.8 0l194.69-194.69a28.86 28.86 0 0 0 0-40.81z"/></svg>
+  </div>
+  <div class="md-source__repository">
+    GitHub
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  <span class="md-ellipsis">
+    🏠 Home
+  </span>
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="." class="md-nav__link md-nav__link--active">
+        
+  
+  <span class="md-ellipsis">
+    🏠 Home
+  </span>
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#1-introduccion" class="md-nav__link">
+    <span class="md-ellipsis">
+      1. Introducción 📔
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2-instalacion" class="md-nav__link">
+    <span class="md-ellipsis">
+      2. Instalación 🛠️
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#3-uso" class="md-nav__link">
+    <span class="md-ellipsis">
+      3. Uso ▶️
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="3. Uso ▶️">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#comando-extract" class="md-nav__link">
+    <span class="md-ellipsis">
+      Comando extract
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#comando-create" class="md-nav__link">
+    <span class="md-ellipsis">
+      Comando create
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#configuracion" class="md-nav__link">
+    <span class="md-ellipsis">
+      Configuración
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#proyecto-inesdata" class="md-nav__link">
+    <span class="md-ellipsis">
+      Proyecto INESDATA
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    ✅ Calidad
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2">
+            <span class="md-nav__icon md-icon"></span>
+            ✅ Calidad
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2_1" >
+        
+          
+          <label class="md-nav__link" for="__nav_2_1" id="__nav_2_1_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    🚌 EMT
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_2_1_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2_1">
+            <span class="md-nav__icon md-icon"></span>
+            🚌 EMT
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="notebooks/emt_qa/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Análisis de calidad
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="qa/emt_report.html" target="_blank" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Profile ↗
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="notebooks/eda/emt_eda/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Análisis EDA
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_2_2" id="__nav_2_2_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    🌥️ AEMET
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_2_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2_2">
+            <span class="md-nav__icon md-icon"></span>
+            🌥️ AEMET
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="notebooks/aemet_qa/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Análisis de calidad
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="qa/aemet_report.html" target="_blank" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Profile ↗
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="notebooks/eda/aemet_eda/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Análisis EDA
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_2_3" id="__nav_2_3_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    🚦 INFORMO
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_2_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2_3">
+            <span class="md-nav__icon md-icon"></span>
+            🚦 INFORMO
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="notebooks/informo_qa/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Análisis de calidad
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="qa/informo_report.html" target="_blank" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Profile ↗
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="notebooks/eda/informo_eda/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Análisis EDA
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#1-introduccion" class="md-nav__link">
+    <span class="md-ellipsis">
+      1. Introducción 📔
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2-instalacion" class="md-nav__link">
+    <span class="md-ellipsis">
+      2. Instalación 🛠️
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#3-uso" class="md-nav__link">
+    <span class="md-ellipsis">
+      3. Uso ▶️
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="3. Uso ▶️">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#comando-extract" class="md-nav__link">
+    <span class="md-ellipsis">
+      Comando extract
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#comando-create" class="md-nav__link">
+    <span class="md-ellipsis">
+      Comando create
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#configuracion" class="md-nav__link">
+    <span class="md-ellipsis">
+      Configuración
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#proyecto-inesdata" class="md-nav__link">
+    <span class="md-ellipsis">
+      Proyecto INESDATA
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+  
+  
+
+
+<h1 id="inesdata-mov-datasets">INESDATA-MOV-DATASETS</h1>
+<h2 id="1-introduccion">1. Introducción 📔</h2>
+<p><strong><code>inesdata_mov_datasets</code></strong> es un paquete Python <span class="twemoji"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="m14.25.18.9.2.73.26.59.3.45.32.34.34.25.34.16.33.1.3.04.26.02.2-.01.13V8.5l-.05.63-.13.55-.21.46-.26.38-.3.31-.33.25-.35.19-.35.14-.33.1-.3.07-.26.04-.21.02H8.77l-.69.05-.59.14-.5.22-.41.27-.33.32-.27.35-.2.36-.15.37-.1.35-.07.32-.04.27-.02.21v3.06H3.17l-.21-.03-.28-.07-.32-.12-.35-.18-.36-.26-.36-.36-.35-.46-.32-.59-.28-.73-.21-.88-.14-1.05-.05-1.23.06-1.22.16-1.04.24-.87.32-.71.36-.57.4-.44.42-.33.42-.24.4-.16.36-.1.32-.05.24-.01h.16l.06.01h8.16v-.83H6.18l-.01-2.75-.02-.37.05-.34.11-.31.17-.28.25-.26.31-.23.38-.2.44-.18.51-.15.58-.12.64-.1.71-.06.77-.04.84-.02 1.27.05zm-6.3 1.98-.23.33-.08.41.08.41.23.34.33.22.41.09.41-.09.33-.22.23-.34.08-.41-.08-.41-.23-.33-.33-.22-.41-.09-.41.09zm13.09 3.95.28.06.32.12.35.18.36.27.36.35.35.47.32.59.28.73.21.88.14 1.04.05 1.23-.06 1.23-.16 1.04-.24.86-.32.71-.36.57-.4.45-.42.33-.42.24-.4.16-.36.09-.32.05-.24.02-.16-.01h-8.22v.82h5.84l.01 2.76.02.36-.05.34-.11.31-.17.29-.25.25-.31.24-.38.2-.44.17-.51.15-.58.13-.64.09-.71.07-.77.04-.84.01-1.27-.04-1.07-.14-.9-.2-.73-.25-.59-.3-.45-.33-.34-.34-.25-.34-.16-.33-.1-.3-.04-.25-.02-.2.01-.13v-5.34l.05-.64.13-.54.21-.46.26-.38.3-.32.33-.24.35-.2.35-.14.33-.1.3-.06.26-.04.21-.02.13-.01h5.84l.69-.05.59-.14.5-.21.41-.28.33-.32.27-.35.2-.36.15-.36.1-.35.07-.32.04-.28.02-.21V6.07h2.09l.14.01zm-6.47 14.25-.23.33-.08.41.08.41.23.33.33.23.41.08.41-.08.33-.23.23-.33.08-.41-.08-.41-.23-.33-.33-.23-.41-.08-.41.08z"/></svg></span> cuya finalidad es obtener información de fuentes de datos relacionadas con movilidad, y procesarla de tal forma que pueda ser almacenada dentro de un <a href="https://docs.internationaldataspaces.org/ids-knowledgebase/">espacio de datos</a>. Las fuentes de información disponibles para la extracción de datos son las siguientes:</p>
+<ul>
+<li>🚌 <strong>EMT</strong> (<a href="https://www.emtmadrid.es/Home">Empresa Municipal de Transportes de Madrid</a>): Empresa pública que da servicio de transporte público de superficie en la ciudad de Madrid.
+La EMT dispone de una <a href="https://apidocs.emtmadrid.es/">API</a> desde la cual se pueden realizar peticiones para obtener información sobre las líneas de bus y sus paradas, así como los tiempos de llegada de los autobuses, entre otra información.</li>
+<li>🌥️ <strong>AEMET</strong> (<a href="https://www.aemet.es/es/portada">Agencia Estatal de Meteorología</a>): Agencia que ofrece información meteorológica y climatológica, predicción, avisos, observación, anuncios, atención al público, divulgación e información de la Agencia.
+Al igual que la EMT, esta fuente de datos también dispone de una <a href="https://opendata.aemet.es/opendata/api/">API</a> que ofrece información meteorológica dentro de la ciudad de Madrid actualizada con frecuencia horaria.</li>
+<li>🚦 <strong>Informo</strong> (<a href="https://informo.madrid.es/#/realtime?panel=live">Información de Movilidad de Madrid</a>): Esta fuente de datos ofrece información sobre el tráfico de la ciudad de Madrid, llevando a cabo la medición del tráfico a través de dispositivos como las cámaras de videovigilancia instaladas en los semáforos de las calles, o a través de los lazos inductivos electromagnéticos posicionados en el pavimento de las carreteras.
+Esta fuente de información también posee una <a href="https://informo.madrid.es/informo/tmadrid/pm.xml">API</a> pública que ofrece información sobre el tráfico actualizada cada 5 minutos aproximadamente.</li>
+</ul>
+<p>Gracias a este paquete, una vez generados los datasets dentro del espacio de datos, estos posteriormente podrían ser utilizados por ejemplo para el entrenamiento de modelos de Machine Learning.</p>
+<h2 id="2-instalacion">2. Instalación 🛠️</h2>
+<p>Clonar repositorio:</p>
+<div class="highlight"><pre><span></span><code>git<span class="w"> </span>clone<span class="w"> </span>https://github.com/oeg-upm/inesdata-mov-data-generation.git
+</code></pre></div>
+<p>Instalar paquete:</p>
+<div class="highlight"><pre><span></span><code><span class="nb">cd</span><span class="w"> </span>inesdata-mov-data-generation
+pip<span class="w"> </span>install<span class="w"> </span>.
+</code></pre></div>
+<h2 id="3-uso">3. Uso ▶️</h2>
+<p>Este paquete presenta dos comandos principales: <code>extract</code> para la extracción de datos de las diferentes fuentes de información, y <code>create</code> para la creación de los distintos datasets a partir de los datos previamente extraidos.</p>
+<h3 id="comando-extract">Comando <code>extract</code></h3>
+<p>Comando para realizar la extracción de datos de las diferentes fuentes de información.</p>
+<p><strong>Argumentos:</strong></p>
+<ul>
+<li><code>config-path</code>: parámetro <em>obligatorio</em> con la ruta al fichero de configuración YAML.</li>
+<li><code>sources</code>: parámetro <em>opcional</em> de la fuente de datos de la que se desea realizar la extracción. Los valores que puede tomar son: <code>emt</code>, <code>aemet</code>, <code>informo</code>, o <code>all</code>, que realizaría la extracción de todas las fuentes de datos disponibles. Por defecto sería <code>all</code>.</li>
+</ul>
+<div class="highlight"><pre><span></span><code>python<span class="w"> </span>-m<span class="w"> </span>inesdata_mov_datasets<span class="w"> </span>extract<span class="w"> </span>--config-path<span class="o">=</span>config.yaml<span class="w"> </span>--sources<span class="o">=</span>all
+</code></pre></div>
+<details class="note">
+<summary>Note</summary>
+<p>Generalmente, el uso de este comando se va a usar de forma periódica con el objetivo de crear un histórico de estas fuentes. Una sencilla forma
+de correr este comando es haciendo uso de <code>crontab</code>. El siguiente ejemplo muestra cómo se pueden generar datos cada minuto en el intervalo de 7:00 am a 21:00 pm:</p>
+<div class="highlight"><pre><span></span><code><span class="m">7</span>-21<span class="w"> </span>*<span class="w"> </span>*<span class="w"> </span>*<span class="w"> </span>*<span class="w"> </span>python<span class="w"> </span>-m<span class="w"> </span>inesdata_mov_datasets<span class="w"> </span>extract<span class="w"> </span>--config-path<span class="o">=</span>config.yaml<span class="w"> </span>--sources<span class="o">=</span>all
+</code></pre></div>
+</details>
+<h3 id="comando-create">Comando <code>create</code></h3>
+<p>Comando para crear los datasets a partir de los datos previamente extraidos.</p>
+<p><strong>Argumentos:</strong></p>
+<ul>
+<li><code>config-path</code>: parámetro obligatorio con la ruta al fichero de configuración YAML.</li>
+<li><code>sources</code>: parámetro <em>opcional</em> de la fuente de datos de la que se desea realizar la extracción. Los valores que puede tomar son: <code>emt</code>, <code>aemet</code>, <code>informo</code>, o <code>all</code>, que realizaría la creación de los datasets de todas las fuentes disponibles. Por defecto sería <code>all</code>.</li>
+<li><code>start-date</code>: parámetro <em>opcional</em> de la fecha de inicio de la creación del dataset. Por defecto sería <code>datetime.today()</code>. El formato de dicha fecha debe ser un string con formato "YYYYMMDD".</li>
+<li><code>end-date</code>: parámetro <em>opcional</em> de la fecha de fin de la creación del dataset. Por defecto sería el día siguiente a <code>datetime.today()</code>. El formato de dicha fecha debe ser un string con formato "YYYYMMDD".</li>
+</ul>
+<div class="highlight"><pre><span></span><code>python<span class="w"> </span>-m<span class="w"> </span>inesdata_mov_datasets<span class="w"> </span>create<span class="w"> </span>--config-path<span class="o">=</span>config.yaml<span class="w"> </span>--sources<span class="o">=</span>all<span class="w"> </span>--start-date<span class="o">=</span><span class="m">20240311</span><span class="w"> </span>--end-date<span class="o">=</span><span class="m">20240312</span>
+</code></pre></div>
+<h3 id="configuracion">Configuración</h3>
+<p class="annotate">El fichero de configuración es donde se indica, tanto las credenciales necesarias para acceder a las fuentes, como dónde se van a guardar (1) los ficheros que se generen en el proceso. </p>
+<ol>
+<li><img alt="🙋‍♂️" class="twemoji" src="https://cdn.jsdelivr.net/gh/jdecked/twemoji@15.0.3/assets/svg/1f64b-200d-2642-fe0f.svg" title=":man_raising_hand:" /> Actualmente se soporta tanto almacenaje remoto <code>s3</code> (minio) como en el filesystem (local)</li>
+</ol>
+<div class="highlight"><pre><span></span><code><span class="nt">sources</span><span class="p">:</span><span class="w">  </span><span class="c1"># data sources credentials</span>
+<span class="w">  </span><span class="nt">emt</span><span class="p">:</span><span class="w">  </span><span class="c1"># EMT API: https://apidocs.emtmadrid.es/#api-Block_3_TRANSPORT_BUSEMTMAD</span>
+<span class="w">    </span><span class="nt">credentials</span><span class="p">:</span><span class="w">  </span><span class="c1"># EMT auth can be performed via email/password (basic) or via https://mobilitylabs.emtmadrid.es</span>
+<span class="w">      </span><span class="nt">email</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">myemail</span><span class="w">  </span><span class="c1"># your email for EMT basic auth</span>
+<span class="w">      </span><span class="nt">password</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">mypassword</span><span class="w">  </span><span class="c1"># your password for EMT basic auth</span>
+<span class="w">      </span><span class="nt">x_client_id</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">my_x_client_id</span><span class="w">  </span><span class="c1"># your client id for EMT mobilitylabs auth</span>
+<span class="w">      </span><span class="nt">passkey</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">my_passkey</span><span class="w">  </span><span class="c1"># your passkey for EMT mobilitylabs auth</span>
+<span class="w">    </span><span class="nt">stops</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">1</span><span class="p p-Indicator">,</span><span class="nv">2</span><span class="p p-Indicator">]</span><span class="w">  </span><span class="c1"># EMT stops ids</span>
+<span class="w">    </span><span class="nt">lines</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">1</span><span class="p p-Indicator">,</span><span class="nv">2</span><span class="p p-Indicator">]</span><span class="w">  </span><span class="c1"># EMT lines ids</span>
+<span class="w">  </span><span class="nt">aemet</span><span class="p">:</span><span class="w">  </span><span class="c1"># AEMET API: https://opendata.aemet.es/dist/index.html#/predicciones-especificas/Predicci%C3%B3n%20por%20municipios%20horaria.%20Tiempo%20actual.</span>
+<span class="w">    </span><span class="nt">credentials</span><span class="p">:</span><span class="w">  </span><span class="c1"># basic token auth</span>
+<span class="w">      </span><span class="nt">api_key</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">my_api_key</span><span class="w">  </span><span class="c1"># your api key for AEMET auth</span>
+
+
+<span class="nt">storage</span><span class="p">:</span><span class="w">  </span><span class="c1"># storage settings</span>
+<span class="w">  </span><span class="nt">default</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">local</span><span class="w">  </span><span class="c1"># default storage configuration: minio/local</span>
+<span class="w">  </span><span class="nt">config</span><span class="p">:</span><span class="w"> </span>
+<span class="w">    </span><span class="nt">minio</span><span class="p">:</span><span class="w">  </span><span class="c1"># minio config</span>
+<span class="w">      </span><span class="nt">access_key</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">my_access_key</span><span class="w">  </span><span class="c1"># minio access key for auth</span>
+<span class="w">      </span><span class="nt">secret_key</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">my_secret_key</span><span class="w">  </span><span class="c1"># minio secret key for auth</span>
+<span class="w">      </span><span class="nt">endpoint</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">minio-endpoint</span><span class="w">  </span><span class="c1"># minio URL</span>
+<span class="w">      </span><span class="nt">secure</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">True</span><span class="w">  </span><span class="c1"># SSL</span>
+<span class="w">      </span><span class="nt">bucket</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">my_bucket</span><span class="w">  </span><span class="c1"># minio bucket name</span>
+<span class="w">    </span><span class="nt">local</span><span class="p">:</span><span class="w">  </span><span class="c1"># local config</span>
+<span class="w">      </span><span class="nt">path</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">/path/to/save/datasets</span><span class="w">  </span><span class="c1"># local storage path for resulting generated datasets</span>
+<span class="w">  </span><span class="nt">logs</span><span class="p">:</span><span class="w">  </span><span class="c1"># logging settings</span>
+<span class="w">    </span><span class="nt">path</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">/path/to/save/logs</span><span class="w">  </span><span class="c1"># storage path for logs</span>
+<span class="w">    </span><span class="nt">level</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">LOG_LEVEL</span><span class="w">  </span><span class="c1"># log level: INFO/DEBUG</span>
+</code></pre></div>
+<blockquote>
+<h2 id="proyecto-inesdata">Proyecto INESDATA</h2>
+<p><a href="https://inesdata-project.eu/">INESData</a> es una Incubadora española de Espacios de Datos y Servicios de IA que utiliza infraestructuras federadas en la Nube. Se centra en simplificar la adopción de tecnología y acelerar el despliegue industrial del ecosistema nacional de espacios de datos contribuyendo con cuatro espacios de datos (idioma, movilidad, licitación pública y legal, y medios) para demostrar los beneficios de los espacios de datos y la aplicabilidad de la tecnología relacionada. Está financiado por el Ministerio de Transformación Digital de España y NextGenerationEU, en el marco del Programa UNICO I+D CLOUD - Real Decreto 959/2022.</p>
+</blockquote>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    <script id="__config" type="application/json">{"base": ".", "features": ["tabs", "navigation.instant", "content.code.copy"], "search": "assets/javascripts/workers/search.b8dbb3d2.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}}</script>
+    
+    
+      <script src="assets/javascripts/bundle.c8d2eff1.min.js"></script>
+      
+    
+  </body>
+</html>
