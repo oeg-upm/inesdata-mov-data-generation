@@ -3,12 +3,13 @@ import datetime
 import json
 import traceback
 from pathlib import Path
+import pytz
 
 import requests
 import xmltodict
 from loguru import logger
 
-from inesdata_mov_datasets.handlers.logger import import_extract_logger
+from inesdata_mov_datasets.handlers.logger import instantiate_logger
 from inesdata_mov_datasets.settings import Settings
 from inesdata_mov_datasets.utils import check_local_file_exists, check_s3_file_exists, upload_objs
 
@@ -21,7 +22,7 @@ async def get_informo(config: Settings):
     """
     try:
         # Logger
-        import_extract_logger(config, "INFORMO")
+        instantiate_logger(config, "INFORMO", "extract")
         logger.info("Extracting INFORMO")
         now = datetime.datetime.now()
         url_informo = "https://informo.madrid.es/informo/tmadrid/pm.xml"
@@ -50,11 +51,14 @@ async def save_informo(config: Settings, data: json):
     # Get the last update date from the response
     date_from_file = data["pms"]["fecha_hora"]
     dt = datetime.datetime.strptime(date_from_file, "%d/%m/%Y %H:%M:%S")
+    
 
-    # Formatear el objeto datetime en el formato deseado
+    # Format date
     formated_date = dt.strftime("%Y-%m-%dT%H%M")
 
-    current_datetime = datetime.datetime.now().replace(second=0)  # current date without seconds
+    # Get the timezone from Madrid and formated the dates for the object_name of the files
+    europe_timezone = pytz.timezone("Europe/Madrid")
+    current_datetime = datetime.datetime.now(europe_timezone).replace(second=0)
 
     formatted_date_slash = current_datetime.strftime(
         "%Y/%m/%d"

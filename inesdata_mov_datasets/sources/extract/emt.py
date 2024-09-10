@@ -11,13 +11,14 @@ import pytz
 import requests
 from loguru import logger
 
-from inesdata_mov_datasets.handlers.logger import import_extract_logger
+from inesdata_mov_datasets.handlers.logger import instantiate_logger
 from inesdata_mov_datasets.settings import Settings
 from inesdata_mov_datasets.utils import (
     check_local_file_exists,
     check_s3_file_exists,
     read_obj,
     upload_objs,
+    upload_metadata
 )
 
 
@@ -268,7 +269,7 @@ async def get_emt(config: Settings):
     """
     try:
         # Logger
-        import_extract_logger(config, "EMT")
+        instantiate_logger(config, "EMT", "extract")
         logger.info("Extracting EMT")
 
         # Get the timezone from Madrid and formated the dates for the object_name of the files
@@ -528,6 +529,10 @@ async def get_emt(config: Settings):
 
             # Upload the dict to s3 asynchronously if dict contains something (This means minio flag in convig was enabled)
             if eta_dict_upload:
+                #List of str names of objects uploaded into s3
+                list_keys_str = [str(key.parent) + '/' + str(key.name) for key in eta_dict_upload]
+                logger.debug(f"Uploading {len(list_keys_str)} files")
+
                 await upload_objs(
                     config.storage.config.minio.bucket,
                     config.storage.config.minio.endpoint,
@@ -535,13 +540,22 @@ async def get_emt(config: Settings):
                     config.storage.config.minio.secret_key,
                     eta_dict_upload,
                 )
+                
+                upload_metadata(
+                    config.storage.config.minio.bucket,
+                    config.storage.config.minio.endpoint,
+                    config.storage.config.minio.access_key,
+                    config.storage.config.minio.secret_key,
+                    list_keys_str
+                )
+
 
             logger.error(f"{errors_ld} errors in Line Detail")
             logger.error(f"{errors_eta} errors in ETA, list of stops erroring: {list_stops_error}")
+            eta_dict_upload = {}
 
             # Retry the failed petitions
             if errors_eta > 0:
-                eta_dict_upload = {}
                 list_stops_error_retry = []
                 eta_tasks2 = []
                 errors_eta_retry = 0
@@ -601,12 +615,22 @@ async def get_emt(config: Settings):
 
             # Upload the dict to s3 asynchronously if dict contains something (This means minio flag in convig was enabled)
             if eta_dict_upload:
+                #List of str names of objects uploaded into s3
+                list_keys_str = [str(key.parent) + '/' + str(key.name) for key in eta_dict_upload]
+                logger.debug(f"Uploading {len(list_keys_str)} files")
                 await upload_objs(
                     config.storage.config.minio.bucket,
                     config.storage.config.minio.endpoint,
                     config.storage.config.minio.access_key,
                     config.storage.config.minio.secret_key,
                     eta_dict_upload,
+                )
+                upload_metadata(
+                    config.storage.config.minio.bucket,
+                    config.storage.config.minio.endpoint,
+                    config.storage.config.minio.access_key,
+                    config.storage.config.minio.secret_key,
+                    list_keys_str
                 )
 
             end = datetime.datetime.now()

@@ -4,11 +4,12 @@ import datetime
 import json
 import traceback
 from pathlib import Path
+import pytz
 
 import requests
 from loguru import logger
 
-from inesdata_mov_datasets.handlers.logger import import_extract_logger
+from inesdata_mov_datasets.handlers.logger import instantiate_logger
 from inesdata_mov_datasets.settings import Settings
 from inesdata_mov_datasets.utils import check_local_file_exists, check_s3_file_exists, upload_objs
 
@@ -21,7 +22,7 @@ async def get_aemet(config: Settings):
     """
     try:
         # Logger
-        import_extract_logger(config, "AEMET")
+        instantiate_logger(config, "AEMET", "extract")
         logger.info("Extracting AEMET")
         now = datetime.datetime.now()
 
@@ -55,7 +56,10 @@ async def save_aemet(config: Settings, data: json):
         config (Settings): Object with the config file.
         data (json): Data with weather in json format.
     """
-    current_datetime = datetime.datetime.now().replace(second=0)  # current date without seconds
+    
+    # Get the timezone from Madrid and formated the dates for the object_name of the files
+    europe_timezone = pytz.timezone("Europe/Madrid")
+    current_datetime = datetime.datetime.now(europe_timezone).replace(second=0)
     formatted_date_day = current_datetime.strftime(
         "%Y%m%d"
     )  # formatted date year|month|day all together
