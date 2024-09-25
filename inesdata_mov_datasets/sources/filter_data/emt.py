@@ -3,24 +3,18 @@
 import asyncio
 import datetime
 import json
-import os
 import traceback
-from pathlib import Path
 
 import aiohttp
 import pytz
-import requests
 from loguru import logger
 
 from inesdata_mov_datasets.settings import Settings
-from inesdata_mov_datasets.utils import (
-    check_local_file_exists,
-    check_s3_file_exists,
-    read_obj,
-    upload_objs,
+from inesdata_mov_datasets.sources.extract.emt import (
+    get_calendar,
+    token_control,
 )
 
-from inesdata_mov_datasets.sources.extract.emt import login_emt, token_control, get_calendar, get_line_detail
 
 async def get_eta(session: aiohttp, stop_id: str, line_id: str, headers: json) -> json:
     """Make the API call to ETA endpoint.
@@ -101,7 +95,7 @@ async def get_filter_emt(config: Settings, stop_id: str, line_id: str):
 
             eta_responses = await asyncio.gather(*eta_tasks)
             calendar_responses = await asyncio.gather(*calendar_tasks)
-            
+
             logger.info("Extracted EMT")
             return eta_responses[0], calendar_responses[0]
 

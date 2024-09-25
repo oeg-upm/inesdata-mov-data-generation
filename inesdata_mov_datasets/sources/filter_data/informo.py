@@ -1,6 +1,5 @@
 """Gather raw data from Informo."""
 
-import sys
 import traceback
 
 import requests
