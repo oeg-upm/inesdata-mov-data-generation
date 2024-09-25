@@ -7,9 +7,6 @@ import requests
 import xmltodict
 from loguru import logger
 
-sys.path.append("/home/mlia/proyectos/data-generation/")
-
-# from inesdata_mov_datasets.handlers.logger import instantiate_logger
 from inesdata_mov_datasets.settings import Settings
 
 

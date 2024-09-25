@@ -1,12 +1,9 @@
 """Gather raw data from aemet."""
 
-import sys
 import traceback
 
 import requests
 from loguru import logger
-
-sys.path.append("/home/mlia/proyectos/data-generation/")
 
 from inesdata_mov_datasets.settings import Settings
 
