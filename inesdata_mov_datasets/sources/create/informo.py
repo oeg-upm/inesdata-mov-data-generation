@@ -79,8 +79,9 @@ def generate_day_df(storage_path: str, date: str):
         filename = raw_storage_dir / file
         with open(filename, "r") as f:
             content = json.load(f)
-        df = generate_df_from_file(content["pms"])
-        dfs.append(df)
+        if "pms" in content:
+            df = generate_df_from_file(content["pms"])
+            dfs.append(df)
 
     if len(dfs) > 0:
         final_df = pd.concat(dfs)

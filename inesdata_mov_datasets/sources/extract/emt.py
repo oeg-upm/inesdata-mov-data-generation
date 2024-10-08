@@ -44,6 +44,7 @@ async def get_calendar(
     )
     async with session.get(calendar_url, headers=headers) as response:
         try:
+            response.raise_for_status()
             return await response.json()
         except Exception as e:
             logger.error("Error in calendar call to the server")
@@ -73,6 +74,7 @@ async def get_line_detail(
     )
     async with session.get(line_detail_url, headers=headers) as response:
         try:
+            response.raise_for_status()
             return await response.json()
         except Exception as e:
             logger.error(f"Error in line_detail call line {line_id} to the server")
@@ -100,6 +102,7 @@ async def get_eta(session: aiohttp, stop_id: str, headers: json) -> json:
     eta_url = f"https://openapi.emtmadrid.es/v2/transport/busemtmad/stops/{stop_id}/arrives/"
     async with session.post(eta_url, headers=headers, json=body) as response:
         try:
+            response.raise_for_status()
             return await response.json()
         except Exception as e:
             logger.error(f"Error in ETA call stop {stop_id} to the server")
@@ -153,7 +156,7 @@ async def login_emt(config: Settings, object_login_name: str, local_path: Path =
                 login_dict_upload,
             )
 
-        if config.storage.default == "local":
+        if config.storage.default == "local" and local_path:
             os.makedirs(local_path, exist_ok=True)
             with open(os.path.join(local_path, object_login_name), "w") as file:
                 file.write(login_json_str)
@@ -243,6 +246,7 @@ async def token_control(config: Settings, date_slash: str, date_day: str) -> str
                 #Catching an error that ocurrs when the server doesnt provide the token expiration
                 try:
                     expiration_date_unix = data["data"][0]["tokenDteExpiration"]["$date"]
+                    print(expiration_date_unix)
                 except:
                     logger.error(f"Error saving time expiration from login. Solving the problem retrying the call.")
                     token = await login_emt(config, object_login_name, local_path=dir_path)
@@ -252,6 +256,7 @@ async def token_control(config: Settings, date_slash: str, date_day: str) -> str
                     expiration_date_unix / 1000
                 )  #  miliseconds to seconds
                 now = datetime.datetime.now()
+                print(now)
                 # Compare the time expiration of the token withthe actual date
                 if now >= expiration_date:  # reset token
                     token = await login_emt(config, object_login_name, local_path=dir_path)

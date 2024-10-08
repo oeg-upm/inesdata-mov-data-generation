@@ -13,7 +13,8 @@ sources:
   
 
 storage:
-  default: minio
+  # default: minio
+  default: local
   config: 
     minio:
       access_key : trmlia
