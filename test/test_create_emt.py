@@ -456,54 +456,10 @@ def test_generate_eta_df_from_file():
 
 
 ###################### generate_eta_day_df
-# TODO: revisar en el futuro
 @pytest.fixture
 def mock_storage_path(tmp_path):
     """Fixture para un path de almacenamiento temporal."""
     return str(tmp_path)
-
-# @patch('inesdata_mov_datasets.sources.create.emt.generate_eta_df_from_file')
-# @patch('builtins.open', new_callable=MagicMock)
-# @patch('os.listdir')
-# @patch('pathlib.Path.mkdir')  # Parchea la creación de directorios
-# @pytest.mark.asyncio
-# def test_generate_eta_day_df(mock_mkdir, mock_listdir, mock_open, mock_generate_eta_df_from_file, mock_storage_path):
-#     """Test para verificar la generación del DataFrame de ETA para un día específico."""
-
-#     # Simula la lista de archivos en el directorio
-#     mock_listdir.return_value = ['file1.json', 'file2.json']
-    
-#     mock_open.side_effect = [
-#         MagicMock(read=MagicMock(return_value=json.dumps({"key": "value1"}))),
-#         MagicMock(read=MagicMock(return_value=json.dumps({"key": "value2"})))
-#     ]
-    
-#     # Simula los DataFrames generados a partir de los archivos JSON
-#     mock_generate_eta_df_from_file.side_effect = [
-#         pd.DataFrame({"datetime": ["2024-10-08 14:00"], "bus": ["Bus 1"], "line": ["Line A"], "stop": ["Stop 1"]}),
-#         pd.DataFrame({"datetime": ["2024-10-08 15:00"], "bus": ["Bus 2"], "line": ["Line B"], "stop": ["Stop 2"]})
-#     ]
-    
-#     # Llama a la función
-#     result_df = generate_eta_day_df(mock_storage_path, "2024/10/08")
-
-#     # Verifica que se llamaron las funciones adecuadamente
-#     mock_listdir.assert_called_once()
-#     mock_open.assert_called()
-#     assert mock_generate_eta_df_from_file.call_count == 2  # Se debe llamar para cada archivo
-
-#     # Verifica que el DataFrame resultante es el esperado
-#     expected_df = pd.DataFrame({
-#         "datetime": ["2024-10-08 14:00", "2024-10-08 15:00"],
-#         "bus": ["Bus 1", "Bus 2"],
-#         "line": ["Line A", "Line B"],
-#         "stop": ["Stop 1", "Stop 2"]
-#     }).sort_values(by=["datetime", "bus", "line", "stop"])
-
-#     pd.testing.assert_frame_equal(result_df.reset_index(drop=True), expected_df.reset_index(drop=True))
-
-#     # Verifica que el directorio fue creado
-#     mock_mkdir.assert_called_once()
 
 @pytest.mark.asyncio
 def test_generate_eta_day_df_no_files(mock_storage_path):

@@ -5,9 +5,6 @@ from pathlib import Path
 from datetime import datetime
 from inesdata_mov_datasets.sources.create.informo import generate_df_from_file, generate_day_df, create_informo
 
-###################### download_informo
-#TODO:
-
 ###################### generate_df_from_file
 @patch('inesdata_mov_datasets.sources.create.informo.logger')  # Parchea el logger para evitar la salida real en los tests
 def test_generate_df_from_file_valid_data(mock_logger):

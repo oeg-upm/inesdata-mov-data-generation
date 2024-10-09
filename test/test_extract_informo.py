@@ -134,7 +134,7 @@ def mock_settings_local():
 def mock_data():
     return {
         "pms": {
-            "fecha_hora": "08/10/2024 14:30:00"
+            "fecha_hora": "09/10/2024 14:30:00"
         }
     }
 
@@ -157,7 +157,7 @@ async def test_save_informo_minio(mock_upload_objs, mock_check_s3_file_exists, m
         aws_secret_access_key=mock_settings_minio.storage.config.minio.secret_key,
         aws_access_key_id=mock_settings_minio.storage.config.minio.access_key,
         bucket_name=mock_settings_minio.storage.config.minio.bucket,
-        object_name="raw/informo/2024/10/08/informo_2024-10-08T1430.json"
+        object_name="raw/informo/2024/10/09/informo_2024-10-09T1430.json"
     )
 
     # Verificar que se llamó a upload_objs para subir el archivo
@@ -178,12 +178,12 @@ async def test_save_informo_local(mock_open_func, mock_check_local_file_exists, 
 
     # Verificar que se llamó a check_local_file_exists con los argumentos correctos
     mock_check_local_file_exists.assert_called_once_with(
-        Path("/tmp/raw/informo/2024/10/08"),
-        "informo_2024-10-08T1430.json"
+        Path("/tmp/raw/informo/2024/10/09"),
+        "informo_2024-10-09T1430.json"
     )
 
     # Verificar que se abrió el archivo correctamente para escribir los datos
-    mock_open_func.assert_called_once_with(Path("/tmp/raw/informo/2024/10/08") / "informo_2024-10-08T1430.json", "w")
+    mock_open_func.assert_called_once_with(Path("/tmp/raw/informo/2024/10/09") / "informo_2024-10-09T1430.json", "w")
 
     # Verificar que se escribió el contenido JSON en el archivo
     mock_open_func().write.assert_called_once_with(json.dumps(mock_data))

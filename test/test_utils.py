@@ -127,8 +127,13 @@ async def test_get_obj():
 
 
 ###################### download_obj
+@pytest.fixture
+def mock_storage_path(tmp_path):
+    # Usa la ruta temporal proporcionada por pytest
+    return str(tmp_path)
+
 @pytest.mark.asyncio
-async def test_download_obj():
+async def test_download_obj(mock_storage_path):
     """Test para verificar la descarga de un objeto desde S3."""
 
     # Crear un cliente simulado
@@ -141,67 +146,28 @@ async def test_download_obj():
     # Define los parámetros de entrada
     bucket = "my-bucket"
     key = "my-object-key"
-    output_path = "tmp/my-object-key"  # El archivo se guardará en este path
     semaphore = AsyncMock()  # Simular un semáforo
 
     # Ejecuta la función
-    await download_obj(mock_client, bucket, key, output_path, semaphore)
+    await download_obj(mock_client, bucket, key, mock_storage_path, semaphore)
 
     # Verifica que se llama a get_object con los parámetros correctos
     mock_client.get_object.assert_called_once_with(Bucket=bucket, Key=key)
 
     # Verifica que el archivo se ha escrito en el directorio correcto
-    async with aiofiles.open(os.path.join(output_path, key), "r") as out_file:
+    async with aiofiles.open(os.path.join(mock_storage_path, key), "r") as out_file:
         content = await out_file.read()
 
     # Verifica que el contenido del archivo es el esperado
     assert content == '{"key": "value"}'
 
     # Verifica que se crea el directorio
-    os.makedirs(os.path.dirname(output_path), exist_ok=True)
-    assert os.path.isdir(os.path.dirname(output_path))
+    os.makedirs(os.path.dirname(mock_storage_path), exist_ok=True)
+    assert os.path.isdir(os.path.dirname(mock_storage_path))
+
+
 
 ###################### download_objs
-#TODO: revisar
-# @pytest.mark.asyncio
-# @patch('inesdata_mov_datasets.utils.get_session')  
-# @patch('inesdata_mov_datasets.utils.list_objs')  
-# @patch('inesdata_mov_datasets.utils.download_obj')  
-# @patch('inesdata_mov_datasets.utils.logger')  
-# async def test_download_objs_with_eta(mock_logger, mock_download_obj, mock_list_objs, mock_get_session):
-#     """Test para verificar la descarga de objetos desde S3 con prefix que contiene '/eta'."""
-    
-#     # Simular el cliente S3
-#     mock_client = AsyncMock()
-#     mock_get_session.return_value.create_client.return_value.__aenter__.return_value = mock_client
-    
-#     # Simular la respuesta de metadata.txt
-#     mock_response = AsyncMock()
-#     mock_response['Body'].read=AsyncMock(return_value=b'key1\nkey2\n\nkey3\n')
-#     mock_client.get_object.return_value = mock_response
-
-#     bucket = "my-bucket"
-#     prefix = "some/path/to/eta/"
-#     output_path = "output_directory/"
-#     endpoint_url = "http://minio.example.com"
-#     aws_access_key_id = "minio_user"
-#     aws_secret_access_key = "minio_password"
-
-#     # Ejecutar la función
-#     await download_objs(bucket, prefix, output_path, endpoint_url, aws_access_key_id, aws_secret_access_key)
-
-#     # Verifica que se llama a get_object con el bucket y la metadata_path correcta
-#     mock_client.get_object.assert_called_once_with(Bucket=bucket, Key='some/path/to/eta/metadata.txt')
-
-#     # Verifica que se llaman a download_obj con los parámetros correctos
-#     assert mock_download_obj.call_count == 3  # Tres claves: key1, key2, key3
-
-#     # Verifica que se haya llamado al logger
-#     mock_logger.debug.assert_any_call("Downloading files from s3")
-#     mock_logger.debug.assert_any_call("Downloading 3 files from emt endpoint")
-#     mock_logger.debug.assert_any_call("Finished all tasks. 3/3")
-
-
 @pytest.mark.asyncio
 @patch('inesdata_mov_datasets.utils.get_session')  
 @patch('inesdata_mov_datasets.utils.download_obj')  
@@ -357,60 +323,59 @@ async def test_upload_objs(mock_upload_obj, mock_get_session):
     
     # Verifica que upload_obj fue llamado con los argumentos correctos
     assert mock_upload_obj.call_count == 2
-    # for key in objects_dict.keys():
-        # mock_upload_obj.assert_any_call(mock_client, bucket, key, objects_dict[key]) #TODO: preguntar pq puede fallar
-    
+        
 
 ###################### read_settings
-# TODO: revisar en el futuro
-# @pytest.fixture
-# def mock_yaml_data():
-#     """Fixture para datos simulados de configuración en formato YAML."""
-#     return """
-#             sources:
-#                 aemet:
-#                     credentials:
-#                     api_key: test-api-key
-#                 emt:
-#                     url: http://example.com
-#             storage:
-#                 local:
-#                     path: /local/path
-#                 minio:
-#                     bucket: mybucket
-#                     endpoint_url: http://minio.example.com
-#                     aws_access_key_id: test-access-key
-#                     aws_secret_access_key: test-secret-key
-# """
+# Ejemplo de datos YAML simulados
+yaml_content = """
+sources:
+  emt:
+    credentials:
+        email: myemail
+        password: mypassword
+        x_client_id: my_x_client_id
+        passkey: my_passkey
+    stops: [1,2]
+    lines: [1,2]
+  aemet:
+    credentials:
+        api_key: my_api_key
+storage:
+  default: local
+  config:
+    minio:
+        access_key: my_access_key
+        secret_key: my_secret_key
+        endpoint: minio-endpoint
+        secure: True
+        bucket: my_bucket
+    local:
+        path: /path/to/save/datasets
+  logs:
+    path: /path/to/save/logs
+    level: LOG_LEVEL
+"""
 
-# @patch("builtins.open")
-# @patch("yaml.safe_load")
-# def test_read_settings(mock_yaml_safe_load, mock_open, mock_yaml_data):
-#     """Test para verificar la lectura de configuraciones desde un archivo YAML."""
-    
-#     # Simula el comportamiento de open para devolver los datos YAML simulados
-#     mock_open.return_value.__enter__.return_value.read.return_value = mock_yaml_data
+def test_read_settings():
+    # Simulamos la función open y la lectura del archivo YAML
+    with patch("builtins.open", mock_open(read_data=yaml_content)):
+        # Simulamos la carga de los datos con yaml.safe_load
+        with patch("yaml.safe_load", return_value=yaml.safe_load(yaml_content)):
+            # Llamamos a la función para probarla
+            settings = read_settings("path/to/config.yaml")
+            print(settings.sources.emt.credentials)
 
-#     # Configura el mock para yaml.safe_load
-#     mock_yaml_safe_load.return_value = yaml.safe_load(mock_yaml_data)
+            # Verificamos que los valores cargados en settings sean correctos
+            if settings.storage.default == "local" and settings.sources.aemet.credentials.api_key == "my_api_key":
+                # Verificamos que email y password de EMT sean None
+                assert settings.sources.emt.credentials.email is None
+                assert settings.sources.emt.credentials.password is None
+            assert settings.sources.aemet.credentials.api_key == "my_api_key"
+            assert settings.storage.default == "local"
+            assert settings.storage.config.local.path == "/path/to/save/datasets"
+            assert settings.storage.config.minio.access_key == "my_access_key"
+            assert settings.storage.logs.level == "LOG_LEVEL"
 
-#     # Llama a la función
-#     settings = read_settings("config.yaml")
-
-#     # Verifica que se llamó a open
-#     mock_open.assert_called_once_with("config.yaml", "r")
-
-#     # Verifica que se llamó a yaml.safe_load
-#     mock_yaml_safe_load.assert_called_once()
-
-#     # Verifica que el objeto Settings se ha inicializado correctamente
-#     assert settings.sources.aemet.credentials.api_key == "test-api-key"
-#     assert settings.sources.emt.url == "http://example.com"
-#     assert settings.storage.local.path == "/local/path"
-#     assert settings.storage.minio.bucket == "mybucket"
-#     assert settings.storage.minio.endpoint_url == "http://minio.example.com"
-#     assert settings.storage.minio.aws_access_key_id == "test-access-key"
-#     assert settings.storage.minio.aws_secret_access_key == "test-secret-key"
 
 ###################### check_local_file_exists
 @pytest.fixture

@@ -2,7 +2,6 @@ import pytest
 from aiohttp import ClientSession
 from aioresponses import aioresponses
 from unittest.mock import patch, AsyncMock, MagicMock
-from pathlib import Path
 import os
 import json
 import datetime
@@ -278,74 +277,31 @@ async def test_token_control_regenerate_token(mock_config, mock_login_emt, mock_
     # Verificar que el token es el esperado
     assert token == "new_token"
 
-#TODO: error al meter expiration_date
-# @pytest.mark.asyncio
-# async def test_token_control_existing_token(mock_config, mock_login_emt, mock_check_local_file_exists, mock_read_obj):
-#     """Test para verificar que se usa un token existente que no ha caducado."""
+@pytest.fixture
+def mock_config_minio():
+    """Fixture para simular la configuración de settings."""
+    settings = MagicMock()
+    settings.storage.default = "minio"  # Cambiar a "minio" si es necesario para otros tests
+    settings.storage.config.local.path = "/tmp"
+    return settings
 
-#     # Simula que el archivo ya existe
-#     mock_check_local_file_exists.return_value = True
+@patch('inesdata_mov_datasets.sources.extract.emt.check_s3_file_exists')
+@patch('inesdata_mov_datasets.sources.extract.emt.login_emt')
+@pytest.mark.asyncio
+async def test_token_control_minio_file_not_exists(mock_login_emt, mock_check_s3_file_exists, mock_config_minio):
 
-#     # Simula el contenido del archivo JSON
-#     expiration_date = (datetime.datetime.now() + datetime.timedelta(hours=1))
-#     mock_read_obj.return_value = json.dumps({
-#         "data": [{
-#             "accessToken": "existing_token",
-#             "tokenDteExpiration": {
-#                 "$date": expiration_date# Expira en 1 hora  # Expira en 1 hora
+    # Simular que el archivo de login no existe en MinIO
+    mock_check_s3_file_exists.return_value = False
+    mock_login_emt.return_value = "fake_token"
 
-#             }
-#         }]
-#     })
+    token = await token_control(mock_config_minio, "2023-10-09", "20231009")
 
-#     # Crear la estructura de directorios necesaria para la prueba
-#     dir_path = os.path.join(mock_config.storage.config.local.path, "raw", "emt", "2024/10/08", "login")
-#     os.makedirs(dir_path, exist_ok=True)  # Crea la carpeta si no existe
-
-#     # Aquí puedes crear un archivo de prueba si es necesario
-#     with open(os.path.join(dir_path, "login_20241008.json"), "w") as f:
-#         f.write(mock_read_obj.return_value)
-
-#     # Llama a la función
-#     token = await token_control(mock_config, "2024/10/08", "20241008")
-
-#     # Verificar que no se llama a login_emt
-#     # mock_login_emt.assert_not_called()
-    
-#     # Verificar que el token es el existente
-#     assert token == "existing_token"
-
-# TODO: analogo al anterior
-# @pytest.mark.asyncio
-# async def test_token_control_expired_token(mock_config, mock_login_emt, mock_check_local_file_exists, mock_read_obj):
-#     """Test para verificar que se regenera el token si ha caducado."""
-
-#     # Simula que el archivo ya existe
-#     mock_check_local_file_exists.return_value = True
-
-#     # Simula el contenido del archivo JSON
-#     mock_read_obj.return_value = json.dumps({
-#         "data": [{
-#             "accessToken": "expired_token",
-#             "tokenDteExpiration": {
-#                 "$date": (datetime.datetime.now() - datetime.timedelta(hours=1))  # Expirado
-#             }
-#         }]
-#     })
-
-#     # Simula el nuevo token devuelto por login_emt
-#     mock_login_emt.return_value = "new_token"
-
-#     # Llama a la función
-#     token = await token_control(mock_config, "2024/10/08", "20241008")
-
-#     # Verificar que se llama a login_emt
-#     mock_login_emt.assert_called_once()
-    
-#     # Verificar que el token es el nuevo
-#     assert token == "new_token"
+    assert token == "fake_token"
+    mock_login_emt.assert_called_once()
+    mock_check_s3_file_exists.assert_called_once()
 
 
+###################### get_emt
 @pytest.fixture
 def mock_settings_get_emt():
     """Fixture para simular la configuración de settings."""
@@ -370,7 +326,7 @@ def mock_settings_get_emt():
 @patch('inesdata_mov_datasets.sources.extract.emt.check_local_file_exists')  
 @patch('inesdata_mov_datasets.sources.extract.emt.check_s3_file_exists')  
 @pytest.mark.asyncio
-async def test_get_emt(mock_check_s3_file_exists, mock_check_local_file_exists, mock_upload_objs,
+async def test_get_emt_local(mock_check_s3_file_exists, mock_check_local_file_exists, mock_upload_objs,
                         mock_get_eta, mock_get_calendar, mock_get_line_detail,
                         mock_token_control, mock_error, mock_debug, mock_info, mock_instantiate_logger, mock_settings_get_emt):
     """Test para verificar la extracción de datos de EMT."""
@@ -410,3 +366,123 @@ async def test_get_emt(mock_check_s3_file_exists, mock_check_local_file_exists, 
 
     # Verificar que se llama a logger.debug
     mock_debug.assert_called()
+
+
+@patch('inesdata_mov_datasets.sources.extract.emt.check_local_file_exists')
+@patch('inesdata_mov_datasets.sources.extract.emt.get_line_detail')
+@pytest.mark.asyncio
+async def test_get_emt_file_exists_local(mock_check_local_file_exists, mock_get_line_detail, mock_settings_get_emt):
+    mock_check_local_file_exists.return_value = True  # Simula que el archivo ya existe
+    
+    await get_emt(mock_settings_get_emt)
+    
+    # Verifica que no se haya llamado a la función get_line_detail
+    mock_get_line_detail.assert_not_called()
+
+
+@patch('inesdata_mov_datasets.sources.extract.emt.get_line_detail')
+@patch('inesdata_mov_datasets.sources.extract.emt.logger.error')
+@pytest.mark.asyncio
+async def test_get_emt_line_detail_error_local(mock_logger_error,mock_get_line_detail, mock_settings_get_emt):
+    mock_get_line_detail.return_value = {"code": "99", "error": "Line Error"}  # Simula error en la respuesta
+    
+    await get_emt(mock_settings_get_emt)
+    
+    # Verifica que el error se haya registrado en los logs
+    assert mock_logger_error.call_count == 2
+
+@patch('inesdata_mov_datasets.sources.extract.emt.get_eta')
+@patch('inesdata_mov_datasets.sources.extract.emt.logger.error')
+@pytest.mark.asyncio
+async def test_get_emt_eta_errors_local(mock_logger_error,mock_get_eta, mock_settings_get_emt):
+    mock_get_eta.return_value = {"code": "99", "error": "ETA Error"}  # Simula error en las paradas
+    
+    await get_emt(mock_settings_get_emt)
+    
+    assert mock_logger_error.call_count == 2
+
+@patch('inesdata_mov_datasets.sources.extract.emt.get_calendar')
+@patch('inesdata_mov_datasets.sources.extract.emt.logger.error')
+@pytest.mark.asyncio
+async def test_get_emt_calendar_errors_local(mock_logger_error,mock_get_calendar, mock_settings_get_emt):
+    mock_get_calendar.return_value = {"code": "99", "error": "ETA Error"}  # Simula error en las paradas
+    
+    await get_emt(mock_settings_get_emt)
+    
+    assert mock_logger_error.call_count == 2
+
+@pytest.fixture
+async def test_get_emt_minio_success():
+    config = Settings()  # Instancia la configuración que se utiliza en producción.
+    config.storage.default = "minio"
+    
+    # Mock del response de token_control
+    with patch("inesdata_mov_datasets.sources.extract.emt.token_control", return_value="mocked_token") as mock_token_control:
+        # Mock del método de ClientSession
+        with patch("aiohttp.ClientSession") as MockClientSession:
+            session_mock = MagicMock()
+            MockClientSession.return_value.__aenter__.return_value = session_mock
+            
+            # Mock de los métodos relacionados con MinIO
+            with patch("inesdata_mov_datasets.sources.extract.emt.check_s3_file_exists", return_value=False) as mock_check_s3:
+                with patch("inesdata_mov_datasets.sources.extract.emt.get_line_detail", return_value={"code": "00"}) as mock_line_detail:
+                    with patch("inesdata_mov_datasets.sources.extract.emt.get_calendar", return_value={"code": "00"}) as mock_calendar:
+                        with patch("inesdata_mov_datasets.sources.extract.emt.get_eta", return_value={"code": "00"}) as mock_eta:
+                            with patch("inesdata_mov_datasets.sources.extract.emt.upload_objs") as mock_upload_objs:
+                                # Ejecución de la función a probar
+                                await get_emt(config)
+                                
+                                # Verificación de que las funciones han sido llamadas correctamente
+                                mock_token_control.assert_called_once()
+                                session_mock.get.assert_called()  # Verifica que la sesión hizo peticiones
+                                mock_check_s3.assert_called()  # Verifica que se comprobaron archivos en S3
+                                mock_line_detail.assert_called()  # Verifica que se llamaron las líneas de detalle
+                                mock_calendar.assert_called()  # Verifica que se llamó el calendario
+                                mock_eta.assert_called()  # Verifica que se llamaron las ETAs
+                                mock_upload_objs.assert_called()  # Verifica que se subieron archivos a S3
+
+@pytest.fixture
+def mock_settings_get_emt_minio():
+    """Fixture para simular la configuración de settings."""
+    settings = MagicMock()
+    settings.sources = MagicMock()
+    settings.sources.emt.lines = ["line1", "line2"]  # Ejemplo de líneas
+    settings.sources.emt.stops = ["1", "2"]  # Ejemplo de paradas
+    settings.storage.default = "minio"  # Cambia a "minio" si es necesario
+    settings.storage.config.minio.endpoint = "http://localhost:9000"
+    settings.storage.config.minio.access_key = "minio_access_key"
+    settings.storage.config.minio.secret_key =  "minio_secret_key"
+    settings.storage.config.minio.bucket = "emt_bucket"
+      # Ruta ficticia para pruebas
+    return settings
+
+@pytest.mark.asyncio
+async def test_get_emt_minio_error_handling(mock_settings_get_emt_minio):
+    
+    with patch("inesdata_mov_datasets.sources.extract.emt.token_control", return_value="mocked_token"):
+        with patch("aiohttp.ClientSession") as MockClientSession:
+            session_mock = MagicMock()
+            MockClientSession.return_value.__aenter__.return_value = session_mock
+            
+            # Simulamos errores en la respuesta de los endpoints
+            with patch("inesdata_mov_datasets.sources.extract.emt.get_line_detail", return_value={"code": "01"}):  # Error en line_detail
+                with patch("inesdata_mov_datasets.sources.extract.emt.get_eta", return_value={"code": "01"}):  # Error en ETA
+                    with patch("inesdata_mov_datasets.sources.extract.emt.upload_objs") as mock_upload_objs:
+                        await get_emt(mock_settings_get_emt_minio)
+                        
+                        # Verificamos que no se subieron archivos debido a errores
+                        mock_upload_objs.assert_not_called()
+
+
+@patch('inesdata_mov_datasets.sources.extract.emt.check_s3_file_exists')
+@patch('inesdata_mov_datasets.sources.extract.emt.get_line_detail')
+@pytest.mark.asyncio
+async def test_get_emt_file_exists_minio(mock_check_s3_file_exists, mock_get_line_detail, mock_settings_get_emt):
+    mock_check_s3_file_exists.return_value = True  # Simula que el archivo ya existe
+    
+    await get_emt(mock_settings_get_emt)
+    
+    # Verifica que no se haya llamado a la función get_line_detail
+    mock_get_line_detail.assert_not_called()
+
+

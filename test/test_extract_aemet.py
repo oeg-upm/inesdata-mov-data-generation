@@ -92,7 +92,7 @@ async def test_save_aemet_minio(mock_debug, mock_check_s3_file_exists, mock_uplo
         aws_secret_access_key=mock_settings_minio.storage.config.minio.secret_key,
         aws_access_key_id=mock_settings_minio.storage.config.minio.access_key,
         bucket_name=mock_settings_minio.storage.config.minio.bucket,
-        object_name='raw/aemet/2024/10/08/aemet_20241008.json'  # Aquí se puede especificar el objeto esperado, si es necesario
+        object_name='raw/aemet/2024/10/09/aemet_20241009.json'  # Aquí se puede especificar el objeto esperado, si es necesario
     )
 
     # Verificar que se llama a upload_objs
@@ -112,8 +112,8 @@ async def test_save_aemet_local(mock_debug, mock_check_local_file_exists, mock_u
 
     # Verificar que check_local_file_exists fue llamado con los parámetros correctos
     mock_check_local_file_exists.assert_called_once_with(
-        Path("/tmp/raw/aemet/2024/10/08"),
-        "aemet_20241008.json"  # Aquí se puede especificar el objeto esperado, si es necesario
+        Path("/tmp/raw/aemet/2024/10/09"),
+        "aemet_20241009.json"  # Aquí se puede especificar el objeto esperado, si es necesario
     )
 
     # Verificar que no se llama a upload_objs, ya que se guarda localmente

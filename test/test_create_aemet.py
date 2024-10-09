@@ -7,6 +7,8 @@ from unittest.mock import patch, MagicMock, AsyncMock, mock_open
 from inesdata_mov_datasets.sources.create.aemet import generate_df_from_file, download_aemet, generate_day_df, create_aemet  
 from inesdata_mov_datasets.settings import Settings
 
+import io
+
 import json
 from datetime import datetime
 import tempfile
@@ -89,63 +91,64 @@ def test_generate_df_from_file_exception():
 
 
 ###################### generate_day_df
-# @pytest.fixture
-# def setup_temp_files(tmp_path):
-#     """Fixture para crear archivos temporales para la prueba."""
-#     storage_path = tmp_path / "raw" / "aemet" / "2024" / "10" / "07"
-#     storage_path.mkdir(parents=True, exist_ok=True)
-
-#     # Crear archivos de ejemplo
-#     example_data_1 = [{"periodo": "10", "value": 1}, {"periodo": "20", "value": 2}]
-#     with open(storage_path / "data1.json", "w") as f:
-#         json.dump(example_data_1, f)
-
-#     example_data_2 = [{"periodo": "30", "value": 3}, {"periodo": "40", "value": 4}]
-#     with open(storage_path / "data2.json", "w") as f:
-#         json.dump(example_data_2, f)
-
-#     return str(storage_path)
-
-# @patch('inesdata_mov_datasets.sources.create.aemet.generate_df_from_file')  # Cambia 'your_module' por el nombre de tu módulo
-# def test_generate_day_df(mock_generate_df_from_file, setup_temp_files):
-#     """Test para la función `generate_day_df`."""
+@patch('inesdata_mov_datasets.sources.create.aemet.logger')
+@patch('inesdata_mov_datasets.sources.create.aemet.os.listdir')
+@patch('inesdata_mov_datasets.sources.create.aemet.open', new_callable=mock_open, read_data='{"data": [{"valor": 10, "periodo": "1200"}]}')
+@patch('inesdata_mov_datasets.sources.create.aemet.generate_df_from_file')
+def test_generate_day_df_valid_data(mock_generate_df_from_file, mock_open, mock_listdir, mock_logger):
+    """Test para verificar la generación de DataFrame con datos válidos."""
+    # Mock listdir para devolver archivos ficticios
+    mock_listdir.return_value = ["file1.json", "file2.json"]
     
-#     # Configurar el mock para que devuelva DataFrames
-#     mock_generate_df_from_file.side_effect = [
-#         pd.DataFrame({"periodo": ["10", "20"], "value": [1, 2]}),
-#         pd.DataFrame({"periodo": ["30", "40"], "value": [3, 4]})
-#     ]
+    # Simular la salida de generate_df_from_file con un DataFrame válido
+    mock_generate_df_from_file.return_value = pd.DataFrame(
+        {"periodo": ["1200"], "valor": [10], "datetime": pd.to_datetime("2024-10-01 12:00:00")}
+    )
 
-#     # Llamar a la función
-#     generate_day_df(storage_path=setup_temp_files, date="2024/10/07")
-#     print(mock_generate_df_from_file.call_count)
-#     # Verificar que se llamara al mock la cantidad correcta de veces
-#     # assert mock_generate_df_from_file.call_count == 2
+    storage_path = "/tmp"
+    date = "2024/10/01"
 
-#     # Comprobar que los archivos se han procesado correctamente
-#     processed_file_path = os.path.join(setup_temp_files.replace("raw", "processed"), "aemet", "20241007.csv")
-#     assert os.path.exists(processed_file_path)
+    # Ejecutar la función
+    generate_day_df(storage_path, date)
 
-#     # Cargar el DataFrame procesado para verificar su contenido
-#     processed_df = pd.read_csv(processed_file_path)
-#     assert processed_df.shape[0] == 4  # Verificar que hay 4 filas
-#     assert "datetime" in processed_df.columns  # Comprobar que la columna datetime está presente
-#     assert "data" in processed_df.columns  # Comprobar que la columna data está presente
+    # Verificar que el DataFrame fue generado y guardado correctamente
+    processed_file_path = Path(storage_path) / Path("processed") / "aemet" / date / f"aemet_{date.replace('/', '')}.csv"
+    assert processed_file_path.is_file(), "El archivo procesado no fue creado"
 
-# @patch('inesdata_mov_datasets.sources.create.aemet.os.listdir')
-# @patch('inesdata_mov_datasets.sources.create.aemet.logger.debug')
-# def test_generate_day_df_no_files(mock_logger_debug, mock_listdir):
-#     """Test para manejar el caso donde no hay archivos para procesar."""
-    
-#     mock_listdir.return_value = []
-    
-#     # Llamar a la función
-#     storage_path = "/tmp"
-#     date = "2024/10/07"
-#     generate_day_df(storage_path, date)
+@patch('inesdata_mov_datasets.sources.create.aemet.logger')
+@patch('inesdata_mov_datasets.sources.create.aemet.os.listdir')
+def test_generate_day_df_no_files(mock_listdir, mock_logger):
+    """Test para verificar el comportamiento cuando no hay archivos en el directorio."""
+    # Simular que no hay archivos en el directorio
+    mock_listdir.return_value = []
 
-#     # Verificar que el logger fue llamado indicando que no hay datos
-#     mock_logger_debug.assert_called_once_with("There is no data to create")
+    storage_path = "/tmp"
+    date = "2024/10/02"
+
+    # Ejecutar la función
+    generate_day_df(storage_path, date)
+
+    # Verificar que no se generó ningún archivo procesado
+    processed_file_path = Path(storage_path) / Path("processed") / "aemet" / date / f"aemet_{date.replace('/', '')}.csv"
+    print(processed_file_path)
+    assert not processed_file_path.is_file(), "No debería haberse creado un archivo procesado"
+
+@patch('inesdata_mov_datasets.sources.create.aemet.logger')
+@patch('inesdata_mov_datasets.sources.create.aemet.os.listdir')
+@patch('builtins.open', new_callable=mock_open, read_data='{"no_data_key": [{"valor": 10}]}')
+def test_generate_day_df_incorrect_structure(mock_open, mock_listdir, mock_logger):
+    """Test para verificar el comportamiento cuando la estructura del archivo es incorrecta."""
+    # Simular que hay un archivo en el directorio, pero con una estructura incorrecta
+    mock_listdir.return_value = ["file1.json"]
+
+    storage_path = "/tmp"
+    date = "2024/10/03"
+
+    # Ejecutar la función
+    generate_day_df(storage_path, date)
+
+    # Verificar que el logger registró un mensaje de debug indicando que no se creó un DataFrame
+    mock_logger.debug.assert_called_with("There is no data to create")
 
 ###################### create_aemet
 @pytest.fixture
