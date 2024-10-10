@@ -32,12 +32,15 @@ def download_aemet(
         aws_access_key_id (str): minio user
         aws_secret_access_key (str): minio password
     """
-    loop = asyncio.new_event_loop()
-    loop.run_until_complete(
-        download_objs(
-            bucket, prefix, output_path, endpoint_url, aws_access_key_id, aws_secret_access_key
+    try:
+        loop = asyncio.new_event_loop()
+        loop.run_until_complete(
+            download_objs(
+                bucket, prefix, output_path, endpoint_url, aws_access_key_id, aws_secret_access_key
+            )
         )
-    )
+    except Exception as e:
+        logger.error(e)
 
 
 def generate_df_from_file(content: dict, date: str) -> pd.DataFrame:
@@ -99,26 +102,28 @@ def generate_day_df(storage_path: str, date: str):
             content = json.load(f)
         df = generate_df_from_file(content, date)
         dfs.append(df)
-
     if len(dfs) > 0:
         final_df = pd.concat(dfs)
-        # fix hour col
-        final_df["periodo"] = (
-            final_df["periodo"]
-            .str.pad(width=4, side="right", fillchar="0")
-            .replace(r"(\d{2})(\d+)", r"\1:\2", regex=True)
-        )
-        # add datetime col
-        final_df["datetime"] = pd.to_datetime(date + " " + final_df["periodo"])
-        final_df.drop(columns="periodo", inplace=True)
-        # sort values
-        final_df = final_df.sort_values(by="datetime")
-        # export final df
-        processed_storage_dir = Path(storage_path) / Path("processed") / "aemet" / date
-        date_formatted = date.replace("/", "")
-        Path(processed_storage_dir).mkdir(parents=True, exist_ok=True)
-        final_df.to_csv(processed_storage_dir / f"aemet_{date_formatted}.csv", index=None)
-        logger.info(f"Created AEMET df of shape {final_df.shape}")
+        if 'periodo' in final_df.columns:
+            # fix hour col
+            final_df["periodo"] = (
+                final_df["periodo"]
+                .str.pad(width=4, side="right", fillchar="0")
+                .replace(r"(\d{2})(\d+)", r"\1:\2", regex=True)
+            )
+            # add datetime col
+            final_df["datetime"] = pd.to_datetime(date + " " + final_df["periodo"])
+            final_df.drop(columns="periodo", inplace=True)
+            # sort values
+            final_df = final_df.sort_values(by="datetime")
+            # export final df
+            processed_storage_dir = Path(storage_path) / Path("processed") / "aemet" / date
+            date_formatted = date.replace("/", "")
+            Path(processed_storage_dir).mkdir(parents=True, exist_ok=True)
+            final_df.to_csv(processed_storage_dir / f"aemet_{date_formatted}.csv", index=None)
+            logger.info(f"Created AEMET df of shape {final_df.shape}")
+        else:
+            logger.debug("There is no data to create")
     else:
         logger.debug("There is no data to create")
 
