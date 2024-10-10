@@ -6,6 +6,8 @@ import xmltodict
 from pathlib import Path
 from loguru import logger
 import json
+import pytz
+import datetime
 
 
 ###################### get_informo
@@ -151,13 +153,24 @@ async def test_save_informo_minio(mock_upload_objs, mock_check_s3_file_exists, m
     # Llamar a la función
     await save_informo(mock_settings_minio, mock_data)
 
+    date_from_file = mock_data["pms"]["fecha_hora"]
+    dt = datetime.datetime.strptime(date_from_file, "%d/%m/%Y %H:%M:%S")
+    formated_date = dt.strftime("%Y-%m-%dT%H%M")
+    # Get the timezone from Madrid and formated the dates for the object_name of the files
+    europe_timezone = pytz.timezone("Europe/Madrid")
+    current_datetime = datetime.datetime.now(europe_timezone).replace(second=0)
+    print(current_datetime)
+    formatted_date_slash = current_datetime.strftime(
+        "%Y/%m/%d"
+    ) 
+    
     # Verificar que se llamó a check_s3_file_exists con los argumentos correctos
     mock_check_s3_file_exists.assert_called_once_with(
         endpoint_url=mock_settings_minio.storage.config.minio.endpoint,
         aws_secret_access_key=mock_settings_minio.storage.config.minio.secret_key,
         aws_access_key_id=mock_settings_minio.storage.config.minio.access_key,
         bucket_name=mock_settings_minio.storage.config.minio.bucket,
-        object_name="raw/informo/2024/10/09/informo_2024-10-09T1430.json"
+        object_name=f"raw/informo/{formatted_date_slash}/informo_{formated_date}.json"
     )
 
     # Verificar que se llamó a upload_objs para subir el archivo
@@ -175,15 +188,25 @@ async def test_save_informo_local(mock_open_func, mock_check_local_file_exists, 
 
     # Llamar a la función
     await save_informo(mock_settings_local, mock_data)
+    date_from_file = mock_data["pms"]["fecha_hora"]
+    dt = datetime.datetime.strptime(date_from_file, "%d/%m/%Y %H:%M:%S")
+    formated_date = dt.strftime("%Y-%m-%dT%H%M")
+    # Get the timezone from Madrid and formated the dates for the object_name of the files
+    europe_timezone = pytz.timezone("Europe/Madrid")
+    current_datetime = datetime.datetime.now(europe_timezone).replace(second=0)
+    print(current_datetime)
+    formatted_date_slash = current_datetime.strftime(
+        "%Y/%m/%d"
+    ) 
 
     # Verificar que se llamó a check_local_file_exists con los argumentos correctos
     mock_check_local_file_exists.assert_called_once_with(
-        Path("/tmp/raw/informo/2024/10/09"),
-        "informo_2024-10-09T1430.json"
+        Path(f"/tmp/raw/informo/{formatted_date_slash}"),
+        f"informo_{formated_date}.json"
     )
 
     # Verificar que se abrió el archivo correctamente para escribir los datos
-    mock_open_func.assert_called_once_with(Path("/tmp/raw/informo/2024/10/09") / "informo_2024-10-09T1430.json", "w")
+    mock_open_func.assert_called_once_with(Path(f"/tmp/raw/informo/{formatted_date_slash}") / f"informo_{formated_date}.json", "w")
 
     # Verificar que se escribió el contenido JSON en el archivo
     mock_open_func().write.assert_called_once_with(json.dumps(mock_data))
