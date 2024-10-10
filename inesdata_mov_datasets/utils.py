@@ -297,7 +297,7 @@ def check_local_file_exists(path_dir: Path, object_name: str) -> bool:
     """
     # Create a Path object for the file
     file_path = Path(path_dir) / object_name
-
+    print(file_path)
     # Check if the file exists
     if file_path.exists():
         return True
