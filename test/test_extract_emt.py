@@ -52,7 +52,6 @@ async def test_get_calendar_error():
 
             # Llamar a la función
             result = await get_calendar(session, start_date, end_date, headers)
-            print(result)
 
             # Verificar que el resultado sea un error manejado
             assert result == {"code": -1}
@@ -184,7 +183,6 @@ async def test_login_emt_success(mock_makedirs, mock_open, mock_requests_get, mo
 
     # Llama a la función
     token = await login_emt(mock_settings, object_login_name="login_response.json", local_path="/test/storage/")
-    print(token)
     # Verifica que el token retornado sea el esperado
     assert token == "mock_access_token"
 

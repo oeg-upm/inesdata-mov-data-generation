@@ -4,19 +4,30 @@
 #
 #    pip-compile requirements/requirements_dev.in
 #
---trusted-host pypi.org
---trusted-host files.pythonhosted.org
---trusted-host pypi.python.org
-
+aiohttp==3.9.3
+    # via
+    #   -c requirements/requirements.txt
+    #   aioresponses
+aioresponses==0.7.6
+    # via -r requirements/requirements_dev.in
+aiosignal==1.3.1
+    # via
+    #   -c requirements/requirements.txt
+    #   aiohttp
 annotated-types==0.6.0
     # via
     #   -c requirements/requirements.txt
     #   pydantic
 asttokens==2.4.1
     # via stack-data
+async-timeout==4.0.3
+    # via
+    #   -c requirements/requirements.txt
+    #   aiohttp
 attrs==23.2.0
     # via
     #   -c requirements/requirements.txt
+    #   aiohttp
     #   visions
 babel==2.14.0
     # via mkdocs-material
@@ -77,6 +88,11 @@ filelock==3.4.2
     # via virtualenv
 fonttools==4.50.0
     # via matplotlib
+frozenlist==1.4.1
+    # via
+    #   -c requirements/requirements.txt
+    #   aiohttp
+    #   aiosignal
 ghp-import==2.1.0
     # via mkdocs
 htmlmin==0.1.12
@@ -87,6 +103,7 @@ idna==3.6
     # via
     #   -c requirements/requirements.txt
     #   requests
+    #   yarl
 imagehash==4.3.1
     # via
     #   visions
@@ -177,6 +194,11 @@ mkdocs-material-extensions==1.3.1
     # via mkdocs-material
 more-itertools==10.2.0
     # via jaraco-classes
+multidict==6.0.5
+    # via
+    #   -c requirements/requirements.txt
+    #   aiohttp
+    #   yarl
 multimethod==1.11.2
     # via
     #   visions
@@ -268,11 +290,11 @@ pure-eval==0.2.2
     # via stack-data
 pycparser==2.21
     # via cffi
-pydantic==2.6.1
+pydantic==2.9.2
     # via
     #   -c requirements/requirements.txt
     #   ydata-profiling
-pydantic-core==2.16.2
+pydantic-core==2.23.4
     # via
     #   -c requirements/requirements.txt
     #   pydantic
@@ -429,6 +451,10 @@ widgetsnbextension==4.0.10
     # via ipywidgets
 wordcloud==1.9.3
     # via ydata-profiling
+yarl==1.9.4
+    # via
+    #   -c requirements/requirements.txt
+    #   aiohttp
 ydata-profiling==4.7.0
     # via -r requirements/requirements_dev.in
 zipp==3.17.0
