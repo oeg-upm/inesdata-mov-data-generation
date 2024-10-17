@@ -363,7 +363,6 @@ def test_read_settings():
         with patch("yaml.safe_load", return_value=yaml.safe_load(yaml_content)):
             # Llamamos a la función para probarla
             settings = read_settings("path/to/config.yaml")
-            print(settings.sources.emt.credentials)
 
             # Verificamos que los valores cargados en settings sean correctos
             if settings.storage.default == "local" and settings.sources.aemet.credentials.api_key == "my_api_key":

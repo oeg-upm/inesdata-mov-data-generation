@@ -221,7 +221,6 @@ def test_generate_line_df_from_file():
         "line",
     ]
     assert list(df.columns) == expected_columns
-    print(df)
     # Verificar el contenido del DataFrame
     assert df["dayType"].iloc[0] == "FESTIVO"  # Correspondiente al primer elemento de Direction1
     assert df["StartTime"].iloc[0] == "08:00"
@@ -676,7 +675,6 @@ def test_create_emt_success(mock_instantiate_logger, mock_to_csv, mock_mkdir, mo
 
     # Llamar a la función
     create_emt(mock_settings, "2024/10/08")
-    print(mock_to_csv)
     # Verificar que se llama a to_csv para exportar el DataFrame
     mock_to_csv.assert_called_once()
 

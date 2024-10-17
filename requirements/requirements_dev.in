@@ -1,5 +1,6 @@
 # Requirements for development
 -c requirements.txt
+aioresponses==0.7.6
 black~=23.3.0              # Code formater
 isort==5.13.2               # Sort imports
 pre-commit==3.2.2            # Pre-commit hooks

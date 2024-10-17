@@ -246,7 +246,6 @@ async def token_control(config: Settings, date_slash: str, date_day: str) -> str
                 #Catching an error that ocurrs when the server doesnt provide the token expiration
                 try:
                     expiration_date_unix = data["data"][0]["tokenDteExpiration"]["$date"]
-                    print(expiration_date_unix)
                 except:
                     logger.error(f"Error saving time expiration from login. Solving the problem retrying the call.")
                     token = await login_emt(config, object_login_name, local_path=dir_path)
@@ -256,7 +255,6 @@ async def token_control(config: Settings, date_slash: str, date_day: str) -> str
                     expiration_date_unix / 1000
                 )  #  miliseconds to seconds
                 now = datetime.datetime.now()
-                print(now)
                 # Compare the time expiration of the token withthe actual date
                 if now >= expiration_date:  # reset token
                     token = await login_emt(config, object_login_name, local_path=dir_path)
