@@ -159,7 +159,6 @@ async def test_save_informo_minio(mock_upload_objs, mock_check_s3_file_exists, m
     # Get the timezone from Madrid and formated the dates for the object_name of the files
     europe_timezone = pytz.timezone("Europe/Madrid")
     current_datetime = datetime.datetime.now(europe_timezone).replace(second=0)
-    print(current_datetime)
     formatted_date_slash = current_datetime.strftime(
         "%Y/%m/%d"
     ) 
@@ -194,7 +193,6 @@ async def test_save_informo_local(mock_open_func, mock_check_local_file_exists, 
     # Get the timezone from Madrid and formated the dates for the object_name of the files
     europe_timezone = pytz.timezone("Europe/Madrid")
     current_datetime = datetime.datetime.now(europe_timezone).replace(second=0)
-    print(current_datetime)
     formatted_date_slash = current_datetime.strftime(
         "%Y/%m/%d"
     ) 

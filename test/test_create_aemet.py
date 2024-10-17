@@ -130,7 +130,6 @@ def test_generate_day_df_no_files(mock_listdir, mock_logger):
 
     # Verificar que no se generó ningún archivo procesado
     processed_file_path = Path(storage_path) / Path("processed") / "aemet" / date / f"aemet_{date.replace('/', '')}.csv"
-    print(processed_file_path)
     assert not processed_file_path.is_file(), "No debería haberse creado un archivo procesado"
 
 @patch('inesdata_mov_datasets.sources.create.aemet.logger')
