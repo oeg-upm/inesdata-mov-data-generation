@@ -82,7 +82,7 @@ async def get_filter_emt_2(config: Settings, stop_id: str, line_id: str):
 
             logger.info("Extracted EMT")
             et = datetime.datetime.now()
-            print('CHATGPT_2', (et - st).total_seconds())
+            print('second test', (et - st).total_seconds())
             return eta_response, calendar_response
 
     except Exception as e:
@@ -124,7 +124,7 @@ async def get_filter_emt_1(config: Settings, stop_id: str, line_id: str):
 
             logger.info("Extracted EMT")
             et = datetime.datetime.now()
-            print('CHATGPT',(et-st).total_seconds())
+            print('first test',(et-st).total_seconds())
             return eta_response, calendar_response
 
     except Exception as e:
