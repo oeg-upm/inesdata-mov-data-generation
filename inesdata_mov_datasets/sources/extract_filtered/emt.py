@@ -15,6 +15,8 @@ from inesdata_mov_datasets.sources.extract.emt import (
     token_control,
 )
 
+from inesdata_mov_datasets.utils import read_settings
+
 
 async def get_eta(session: aiohttp, stop_id: str, line_id: str, headers: json) -> json:
     """Make the API call to ETA endpoint.
@@ -46,6 +48,88 @@ async def get_eta(session: aiohttp, stop_id: str, line_id: str, headers: json) -
             logger.error(e)
             return {"code": -1}
 
+async def get_filter_emt_2(config: Settings, stop_id: str, line_id: str):
+    """Get all the data from EMT endpoints.
+
+    Args:
+        config (Settings): Object with the config file.
+        stop_id (str): The stop id.
+        line_id (str): The line id.
+    """
+    try:
+        st = datetime.datetime.now()
+        # Get the timezone from Madrid and format the dates for the object_name of the files
+        europe_timezone = pytz.timezone("Europe/Madrid")
+        current_datetime = datetime.datetime.now(europe_timezone).replace(second=0)
+        formatted_date_day = current_datetime.strftime("%Y%m%d")
+        formatted_date_slash = current_datetime.strftime("%Y/%m/%d")
+
+        # Obtain token from EMT
+        access_token = await token_control(config, formatted_date_slash, formatted_date_day)
+
+        headers = {
+            "accessToken": access_token,
+            "Content-Type": "application/json",
+            "Accept": "application/json",
+        }
+
+        async with aiohttp.ClientSession() as session:
+            # Perform both requests concurrently using asyncio.gather
+            eta_response, calendar_response = await asyncio.gather(
+                get_eta(session, stop_id, line_id, headers),
+                get_calendar(session, formatted_date_day, formatted_date_day, headers)
+            )
+
+            logger.info("Extracted EMT")
+            et = datetime.datetime.now()
+            print('CHATGPT_2', (et - st).total_seconds())
+            return eta_response, calendar_response
+
+    except Exception as e:
+        logger.error(e)
+        logger.error(traceback.format_exc())
+
+
+async def get_filter_emt_1(config: Settings, stop_id: str, line_id: str):
+    """Get all the data from EMT endpoints.
+
+    Args:
+        config (Settings): Object with the config file.
+        stop_id (str): The stop id.
+        line_id (str): The line id.
+    """
+    try:
+        st = datetime.datetime.now()
+        # Get the timezone from Madrid and format the dates for the object_name of the files
+        europe_timezone = pytz.timezone("Europe/Madrid")
+        current_datetime = datetime.datetime.now(europe_timezone).replace(second=0)
+        formatted_date_day = current_datetime.strftime("%Y%m%d")
+        formatted_date_slash = current_datetime.strftime("%Y/%m/%d")
+
+        # Obtain token from EMT
+        access_token = await token_control(config, formatted_date_slash, formatted_date_day)
+
+        headers = {
+            "accessToken": access_token,
+            "Content-Type": "application/json",
+            "Accept": "application/json",
+        }
+
+        async with aiohttp.ClientSession() as session:
+            # Perform both requests concurrently using asyncio.gather
+            eta_task = get_eta(session, stop_id, line_id, headers)
+            calendar_task = get_calendar(session, formatted_date_day, formatted_date_day, headers)
+
+            eta_response, calendar_response = await asyncio.gather(eta_task, calendar_task)
+
+            logger.info("Extracted EMT")
+            et = datetime.datetime.now()
+            print('CHATGPT',(et-st).total_seconds())
+            return eta_response, calendar_response
+
+    except Exception as e:
+        logger.error(e)
+        logger.error(traceback.format_exc())
 
 async def get_filter_emt(config: Settings, stop_id: str, line_id: str):
     """Get all the data from EMT endpoints.
@@ -56,6 +140,7 @@ async def get_filter_emt(config: Settings, stop_id: str, line_id: str):
         line_id (str): The line id.
     """
     try:
+        st = datetime.datetime.now()
         # Get the timezone from Madrid and formated the dates for the object_name of the files
         europe_timezone = pytz.timezone("Europe/Madrid")
         current_datetime = datetime.datetime.now(europe_timezone).replace(second=0)
@@ -97,8 +182,14 @@ async def get_filter_emt(config: Settings, stop_id: str, line_id: str):
             calendar_responses = await asyncio.gather(*calendar_tasks)
 
             logger.info("Extracted EMT")
+
+            et = datetime.datetime.now()
+            print('ORIGINAL',(et-st).total_seconds())
             return eta_responses[0], calendar_responses[0]
 
     except Exception as e:
         logger.error(e)
         logger.error(traceback.format_exc())
+
+
+
