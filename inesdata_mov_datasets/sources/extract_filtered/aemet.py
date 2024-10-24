@@ -8,7 +8,7 @@ from loguru import logger
 from inesdata_mov_datasets.settings import Settings
 
 
-async def get_filter_aemet(config: Settings):
+def get_filter_aemet(config: Settings):
     """Request aemet API to get data from Madrid weather.
 
     Args:

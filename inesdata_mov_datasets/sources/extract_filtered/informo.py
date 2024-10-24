@@ -9,7 +9,7 @@ from loguru import logger
 from inesdata_mov_datasets.settings import Settings
 
 
-async def get_filter_informo(config: Settings):
+def get_filter_informo(config: Settings):
     """Request informo API to get data from Madrid traffic.
 
     Args:
@@ -22,7 +22,6 @@ async def get_filter_informo(config: Settings):
 
         # Parse XML
         xml_dict = xmltodict.parse(r.content)
-        # await save_informo(config, xml_dict)
 
         logger.info("Extracted INFORMO")
 
