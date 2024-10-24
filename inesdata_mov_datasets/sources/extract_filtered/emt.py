@@ -78,26 +78,18 @@ async def get_filter_emt(config: Settings, stop_id: str, line_id: str):
         }
 
         async with aiohttp.ClientSession() as session:
-            # List to store tasks asynchronously
-            calendar_tasks = []
-            eta_tasks = []
-
-            # ETA
-            eta_task = asyncio.ensure_future(get_eta(session, stop_id, line_id, headers))
-
-            eta_tasks.append(eta_task)
-
-            # Calendar
-            calendar_task = asyncio.ensure_future(
+            # Create async tasks for ETA and Calendar
+            eta_task = asyncio.create_task(get_eta(session, stop_id, line_id, headers))
+            calendar_task = asyncio.create_task(
                 get_calendar(session, formatted_date_day, formatted_date_day, headers)
             )
-            calendar_tasks.append(calendar_task)
 
-            eta_responses = await asyncio.gather(*eta_tasks)
-            calendar_responses = await asyncio.gather(*calendar_tasks)
+            # Await both tasks concurrently
+            eta_responses, calendar_responses = await asyncio.gather(eta_task, calendar_task)
 
             logger.info("Extracted EMT")
-            return eta_responses[0], calendar_responses[0]
+            return eta_responses, calendar_responses
+
 
     except Exception as e:
         logger.error(e)
